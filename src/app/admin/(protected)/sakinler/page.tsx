@@ -23,15 +23,15 @@ export default async function SakinlerPage() {
         </Link>
       </div>
 
-      <table className="w-full text-sm">
+      <table className="w-full border-separate border-spacing-x-3 text-sm">
         <thead>
-          <tr className="border-b text-left text-gray-500">
-            <th className="py-2">Daire</th>
-            <th>Hesap</th>
-            <th>Ad Soyad</th>
-            <th>Telefon</th>
-            <th>Durum</th>
-            <th></th>
+          <tr className="text-left text-gray-500">
+            <th className="border-b py-2">Daire</th>
+            <th className="border-b">Hesap</th>
+            <th className="border-b">Ad Soyad</th>
+            <th className="border-b">Telefon</th>
+            <th className="border-b">Durum</th>
+            <th className="border-b"></th>
           </tr>
         </thead>
         <tbody>
@@ -39,24 +39,24 @@ export default async function SakinlerPage() {
             const accounts = (unit.accounts as unknown as AccountRow[]) ?? [];
             if (accounts.length === 0) {
               return (
-                <tr key={unit.id} className="border-b">
-                  <td className="py-2">{unit.daire_no}</td>
-                  <td colSpan={4} className="text-gray-400">Henüz hesap yok</td>
+                <tr key={unit.id}>
+                  <td className="border-b py-2">{unit.daire_no}</td>
+                  <td colSpan={5} className="border-b text-gray-400">Henüz hesap yok</td>
                 </tr>
               );
             }
             return accounts.map((acc, i) => (
-              <tr key={acc.id} className="border-b">
+              <tr key={acc.id}>
                 {i === 0 && (
-                  <td className="py-2" rowSpan={accounts.length}>
+                  <td className="border-b py-2" rowSpan={accounts.length}>
                     {unit.daire_no}
                   </td>
                 )}
-                <td>{acc.role === "owner" ? "Ev Sahibi" : "Kiracı"}</td>
-                <td>{acc.full_name}</td>
-                <td>{acc.phone ?? "-"}</td>
-                <td>{acc.is_active ? "Aktif" : "Pasif"}</td>
-                <td>
+                <td className="border-b">{acc.role === "owner" ? "Ev Sahibi" : "Kiracı"}</td>
+                <td className="border-b">{acc.full_name}</td>
+                <td className="border-b">{acc.phone ?? "-"}</td>
+                <td className="border-b">{acc.is_active ? "Aktif" : "Pasif"}</td>
+                <td className="border-b">
                   <form action={toggleAccountActiveAction.bind(null, acc.id, !acc.is_active)}>
                     <button type="submit" className="text-xs text-gray-600 hover:underline">
                       {acc.is_active ? "Pasifleştir" : "Aktifleştir"}

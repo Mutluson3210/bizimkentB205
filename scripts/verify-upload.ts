@@ -10,7 +10,7 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 import * as XLSX from "xlsx";
-import { uploadPeriodAction } from "../src/app/admin/donemler/yeni/actions";
+import { uploadPeriodAction } from "../src/app/admin/(protected)/donemler/yeni/actions";
 import { createServiceClient } from "../src/lib/supabase/service";
 
 const TEST_YEAR = 2030;
@@ -30,8 +30,8 @@ function buildAidatWorkbook(sicakSuA01: number): File {
   const sheet = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, sheet, "TEST");
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
-  return new File([buf], "test-aidat.xlsx", {
+  const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as Uint8Array;
+  return new File([buf] as BlobPart[], "test-aidat.xlsx", {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 }
