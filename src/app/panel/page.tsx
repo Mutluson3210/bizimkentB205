@@ -16,8 +16,13 @@ export default async function PanelPage() {
 
   const figures = await getPeriodFigures(supabase, latest.id, account.unit_id);
 
+  const firstName = account.full_name.trim().split(/\s+/)[0];
+
   return (
     <div className="flex flex-col gap-4">
+      <h1 className="text-3xl font-bold text-foreground">
+        Hoş geldiniz{firstName ? `, ${firstName}` : ""}
+      </h1>
       <p className="text-sm font-medium text-brand-navy">{periodLabel(latest)}</p>
       <AidatCard aidat={figures.aidat} />
       {account.role === "owner" && <DemirbasCard demirbas={figures.demirbas} />}
