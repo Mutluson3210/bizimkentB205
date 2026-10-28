@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { cardClass, errorBoxClass, inputClass, labelClass, primaryButtonClass, successBoxClass } from "@/lib/ui";
+import { cardClass, errorBoxClass, inputClass, labelClass, primaryButtonClass } from "@/lib/ui";
 import { uploadPeriodAction, type UploadState } from "./actions";
 
 const initialState: UploadState = {};
@@ -53,17 +53,12 @@ export default function YeniDonemPage() {
           <input name="sicakSuFile" type="file" accept=".xlsx,.xls" className={inputClass} />
         </label>
 
-        {state.error && <p className={errorBoxClass}>{state.error}</p>}
+        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm has-[:checked]:border-brand-navy has-[:checked]:bg-brand-navy-light">
+          <input type="checkbox" name="notifySms" defaultChecked className="accent-brand-navy" />
+          Yayınlandığında sakinlere SMS ile bildir
+        </label>
 
-        {state.success && (
-          <div className={successBoxClass}>
-            <p className="font-medium">{state.success.periodLabel} yayınlandı.</p>
-            <p>
-              Aidat: {state.success.aidatCount} daire · Demirbaş: {state.success.demirbasCount} daire · Sıcak
-              Su: {state.success.sicakSuCount} daire
-            </p>
-          </div>
-        )}
+        {state.error && <p className={errorBoxClass}>{state.error}</p>}
 
         <button type="submit" disabled={pending} className={primaryButtonClass}>
           {pending ? "Yükleniyor..." : "Yükle ve Yayınla"}

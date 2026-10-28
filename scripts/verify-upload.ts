@@ -40,22 +40,36 @@ function buildFormData(sicakSuA01: number): FormData {
   const fd = new FormData();
   fd.set("year", String(TEST_YEAR));
   fd.set("month", String(TEST_MONTH));
+  fd.set("notifySms", "on");
   fd.append("aidatFiles", buildAidatWorkbook(sicakSuA01));
   return fd;
 }
 
+// uploadPeriodAction artık başarıda redirect() fırlatıyor (SMS gönderimi
+// action'ın içine gömülmediği için) — bu, Next.js'in NEXT_REDIRECT özel
+// hatası olarak gelir; burada yakalayıp hedef path'i okuyoruz.
+async function callAndGetRedirect(formData: FormData): Promise<string> {
+  try {
+    await uploadPeriodAction({}, formData);
+    throw new Error("redirect() fırlatılmadı — action hatasız ama yönlendirmedi.");
+  } catch (err) {
+    const digest = (err as { digest?: string }).digest;
+    if (!digest?.startsWith("NEXT_REDIRECT")) throw err;
+    return digest.split(";")[2];
+  }
+}
+
 async function main() {
   console.log("1) İlk yükleme (revizyon 0 beklenir)...");
-  const r1 = await uploadPeriodAction({}, buildFormData(201));
-  console.log(JSON.stringify(r1, null, 2));
-  if (!r1.success) throw new Error("İlk yükleme başarısız olmamalıydı.");
+  const redirect1 = await callAndGetRedirect(buildFormData(201));
+  console.log("Yönlendirme:", redirect1);
+  if (!redirect1.startsWith("/admin/donemler/") || !redirect1.includes("autosend=1")) {
+    throw new Error("İlk yükleme /admin/donemler/[id]?autosend=1 adresine yönlendirmeliydi.");
+  }
 
   console.log("\n2) Aynı ayı farklı sayılarla tekrar yükleme (revizyon 1 beklenir)...");
-  const r2 = await uploadPeriodAction({}, buildFormData(999));
-  console.log(JSON.stringify(r2, null, 2));
-  if (!r2.success?.periodLabel.includes("Düzeltme 1")) {
-    throw new Error("İkinci yükleme 'Düzeltme 1' etiketi almalıydı.");
-  }
+  const redirect2 = await callAndGetRedirect(buildFormData(999));
+  console.log("Yönlendirme:", redirect2);
 
   const supabase = createServiceClient();
   const { data: periods } = await supabase

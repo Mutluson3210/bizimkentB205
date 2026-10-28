@@ -167,6 +167,47 @@ export type Database = {
           },
         ]
       }
+      otp_codes: {
+        Row: {
+          account_id: string
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          purpose: string
+        }
+        Insert: {
+          account_id: string
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          purpose: string
+        }
+        Update: {
+          account_id?: string
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          purpose?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otp_codes_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       periods: {
         Row: {
           created_at: string
@@ -244,6 +285,57 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_log: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          period_id: string | null
+          phone: string
+          provider_response: string | null
+          status: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          message: string
+          period_id?: string | null
+          phone: string
+          provider_response?: string | null
+          status: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          period_id?: string | null
+          phone?: string
+          provider_response?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_log_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_log_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
             referencedColumns: ["id"]
           },
         ]

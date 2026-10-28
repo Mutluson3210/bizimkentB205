@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { cardClass, errorBoxClass, inputClass, labelClass, primaryButtonClass } from "@/lib/ui";
+import { cardClass, errorBoxClass, inputClass, labelClass, linkClass, primaryButtonClass } from "@/lib/ui";
 import { loginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
@@ -44,6 +45,10 @@ export default function GirisPage() {
         <button type="submit" disabled={pending} className={`${primaryButtonClass} mt-1 w-full`}>
           {pending ? "Giriş yapılıyor..." : "Giriş Yap"}
         </button>
+
+        <Link href="/giris/sifremi-unuttum" className={`${linkClass} text-center`}>
+          Şifremi unuttum
+        </Link>
       </form>
     </main>
   );

@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { buildUnitLookup, unitLookupKey } from "@/lib/data/admin";
 import { parseAidatDemirbasWorkbook, type AidatDemirbasRow } from "@/lib/excel/parseAidatDemirbas";
@@ -12,12 +13,6 @@ const AY_ADLARI = [
 
 export type UploadState = {
   error?: string;
-  success?: {
-    periodLabel: string;
-    aidatCount: number;
-    demirbasCount: number;
-    sicakSuCount: number;
-  };
 };
 
 async function readXlsxFiles(files: File[]): Promise<ArrayBuffer[]> {
@@ -175,12 +170,10 @@ export async function uploadPeriodAction(
     if (error) return rollback(`Sıcak su kayıtları eklenemedi: ${error.message}`);
   }
 
-  return {
-    success: {
-      periodLabel: nextRevision > 0 ? `${label} — Düzeltme ${nextRevision}` : label,
-      aidatCount: resolvedAidat.length,
-      demirbasCount: resolvedAidat.filter(({ row }) => row.demirbas !== null).length,
-      sicakSuCount: resolvedSicakSu.length,
-    },
-  };
+  // SMS gönderimi BİLEREK bu action'ın içine gömülmüyor: dönem başarıyla commit
+  // olduktan sonra, dönem detay sayfasına yönlendiriyoruz; otomatik gönderim
+  // (checkbox işaretliyse) o sayfa yüklenince, DB'de zaten kesinleşmiş bir
+  // periodId ile ayrı bir istek olarak tetiklenir.
+  const notify = formData.get("notifySms") === "on";
+  redirect(`/admin/donemler/${periodId}${notify ? "?autosend=1" : ""}`);
 }

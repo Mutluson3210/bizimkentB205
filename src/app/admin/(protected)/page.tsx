@@ -1,15 +1,20 @@
 import Link from "next/link";
-import { getAllPeriodsWithCounts } from "@/lib/data/admin";
+import { getAllPeriodsWithCounts, getMonthlySmsUsage } from "@/lib/data/admin";
 import { periodLabel } from "@/lib/data/panel";
 import { badgeClass, cardClass, primaryButtonClass } from "@/lib/ui";
 
 export default async function AdminDashboardPage() {
-  const periods = await getAllPeriodsWithCounts();
+  const [periods, smsUsage] = await Promise.all([getAllPeriodsWithCounts(), getMonthlySmsUsage()]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Dönemler</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-foreground">Dönemler</h2>
+          <span className={badgeClass(smsUsage.used >= smsUsage.limit ? "red" : "navy")}>
+            Bu ay SMS: {smsUsage.used} / {smsUsage.limit}
+          </span>
+        </div>
         <Link href="/admin/donemler/yeni" className={primaryButtonClass}>
           Yeni Dönem Yükle
         </Link>
@@ -34,7 +39,9 @@ export default async function AdminDashboardPage() {
               {periods.map((p) => (
                 <tr key={p.id}>
                   <td className="border-b border-border py-3 pl-4 font-medium text-foreground">
-                    {periodLabel(p)}
+                    <Link href={`/admin/donemler/${p.id}`} className="text-brand-navy hover:underline">
+                      {periodLabel(p)}
+                    </Link>
                   </td>
                   <td className="border-b border-border">
                     <span className={badgeClass(p.status === "published" ? "green" : "gray")}>
