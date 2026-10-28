@@ -11,14 +11,14 @@ export default async function PanelPage() {
   const latest = periods[0];
 
   if (!latest) {
-    return <p className="text-sm text-gray-500">Henüz yayınlanmış bir dönem bulunmuyor.</p>;
+    return <p className="text-sm text-muted">Henüz yayınlanmış bir dönem bulunmuyor.</p>;
   }
 
   const figures = await getPeriodFigures(supabase, latest.id, account.unit_id);
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-gray-500">{periodLabel(latest)}</p>
+      <p className="text-sm font-medium text-brand-navy">{periodLabel(latest)}</p>
       <AidatCard aidat={figures.aidat} />
       {account.role === "owner" && <DemirbasCard demirbas={figures.demirbas} />}
       <SicakSuCard sicakSu={figures.sicakSu} />

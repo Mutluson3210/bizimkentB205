@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAccount } from "@/lib/data/panel";
+import { Logo } from "@/components/Logo";
+import { navLinkClass } from "@/lib/ui";
 import { logoutAction } from "./actions";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -15,29 +17,38 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const roleLabel = account.role === "owner" ? "Ev Sahibi" : "Kiracı";
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl px-4 py-6">
-      <header className="mb-6 flex items-center justify-between border-b pb-4">
-        <div>
-          <p className="text-sm text-gray-500">{account.block_name}</p>
-          <h1 className="text-lg font-semibold">
-            {account.daire_no} <span className="font-normal text-gray-500">· {roleLabel}</span>
-          </h1>
+    <div className="min-h-screen">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
+          <Logo size={34} />
+          <nav className="flex items-center gap-5">
+            <Link href="/panel" className={navLinkClass}>
+              Güncel Ay
+            </Link>
+            <Link href="/panel/gecmis" className={navLinkClass}>
+              Geçmiş Aylar
+            </Link>
+            <form action={logoutAction}>
+              <button type="submit" className={navLinkClass}>
+                Çıkış
+              </button>
+            </form>
+          </nav>
         </div>
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/panel" className="text-gray-600 hover:underline">
-            Güncel Ay
-          </Link>
-          <Link href="/panel/gecmis" className="text-gray-600 hover:underline">
-            Geçmiş Aylar
-          </Link>
-          <form action={logoutAction}>
-            <button type="submit" className="text-gray-600 hover:underline">
-              Çıkış
-            </button>
-          </form>
-        </nav>
       </header>
-      {children}
+
+      <div className="mx-auto max-w-2xl px-4 py-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted">{account.block_name}</p>
+            <h1 className="text-xl font-semibold text-foreground">{account.daire_no}</h1>
+          </div>
+          <span className="inline-flex items-center rounded-full bg-brand-navy-light px-3 py-1 text-sm font-medium text-brand-navy">
+            {roleLabel}
+          </span>
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

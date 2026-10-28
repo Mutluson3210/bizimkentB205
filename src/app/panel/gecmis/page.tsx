@@ -14,7 +14,7 @@ export default async function GecmisPage({
 
   const periods = await getPublishedPeriods(supabase);
   if (periods.length === 0) {
-    return <p className="text-sm text-gray-500">Henüz yayınlanmış bir dönem bulunmuyor.</p>;
+    return <p className="text-sm text-muted">Henüz yayınlanmış bir dönem bulunmuyor.</p>;
   }
 
   const { donem } = await searchParams;
@@ -24,7 +24,7 @@ export default async function GecmisPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-500">Dönem seçin</h2>
+        <h2 className="text-sm font-medium text-muted">Dönem seçin</h2>
         <PeriodSelect
           selectedId={selected.id}
           options={periods.map((p) => ({ id: p.id, label: periodLabel(p) }))}
