@@ -14,7 +14,7 @@ export type RosterUploadState = {
   success?: {
     created: CreatedAccount[];
     updated: number;
-    skipped: string[];
+    warnings: string[];
   };
 };
 
@@ -31,9 +31,9 @@ export async function uploadRosterAction(
     return { error: "Bir Excel dosyası seçin." };
   }
 
-  const { rows, unrecognizedRoles } = parseRosterWorkbook(await file.arrayBuffer());
+  const { rows, warnings } = parseRosterWorkbook(await file.arrayBuffer());
   if (rows.length === 0) {
-    return { error: "Dosyadan hiç satır okunamadı. Sütun başlıklarını (Daire No, Ad Soyad, Telefon, Rol) kontrol edin." };
+    return { error: "Dosyadan hiç satır okunamadı. Sütun başlıklarını kontrol edin." };
   }
 
   const lookup = await buildUnitLookup();
@@ -102,6 +102,6 @@ export async function uploadRosterAction(
   }
 
   return {
-    success: { created, updated, skipped: unrecognizedRoles },
+    success: { created, updated, warnings },
   };
 }

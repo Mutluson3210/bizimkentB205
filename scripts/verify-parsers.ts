@@ -34,9 +34,9 @@ const rosterBuf = toBuffer([
 
 const roster = parseRosterWorkbook(rosterBuf);
 console.log("\nRoster satırları:", roster.rows);
-console.log("Tanınmayan roller:", roster.unrecognizedRoles);
+console.log("Uyarılar:", roster.warnings);
 console.assert(roster.rows.length === 2, "Tanınmayan rol satırı hariç 2 satır beklenir");
 console.assert(roster.rows[0].role === "owner" && roster.rows[1].role === "tenant", "Rol eşleme hatalı");
-console.assert(roster.unrecognizedRoles.includes("???"), "Tanınmayan rol yakalanmalı");
+console.assert(roster.warnings.some((w) => w.includes("???")), "Tanınmayan rol yakalanmalı");
 
 console.log("\nTüm assertion'lar geçti (hata görünmüyorsa).");

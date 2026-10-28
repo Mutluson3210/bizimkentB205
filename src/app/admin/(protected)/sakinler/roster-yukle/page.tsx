@@ -14,10 +14,12 @@ export default function RosterYuklePage() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">Sakin Listesi Yükle</h2>
         <p className="mt-1 text-sm text-muted">
-          Sütunlar: Daire No, Ad Soyad, Telefon, Rol (Ev Sahibi / Kiracı). Mevcut hesaplar
-          güncellenir, yeni olanlar için otomatik giriş hesabı oluşturulur ve geçici şifreler bir
-          kerelik olarak aşağıda gösterilir — mutlaka not alıp ilgili kişiye iletin, bu şifreler
-          tekrar gösterilmez.
+          İki format desteklenir: (1) Daire No / Ad Soyad / Telefon / Rol sütunlu basit liste, ya
+          da (2) yönetim şirketinin &quot;İSİM Mal Sahibi / İSİM oturan / Mal Sahibi TEL / Kiracı
+          TEL&quot; şablonu — oturan kişi mal sahibiyle aynıysa kiracı hesabı oluşturulmaz. Mevcut
+          hesaplar güncellenir, yeni olanlar için otomatik giriş hesabı oluşturulur ve geçici
+          şifreler bir kerelik olarak aşağıda gösterilir — mutlaka not alıp ilgili kişiye iletin,
+          bu şifreler tekrar gösterilmez.
         </p>
       </div>
 
@@ -34,10 +36,12 @@ export default function RosterYuklePage() {
       {state.success && (
         <div className={`flex flex-col gap-3 ${successBoxClass}`}>
           <p>{state.success.updated} hesap güncellendi.</p>
-          {state.success.skipped.length > 0 && (
-            <p className="text-brand-red">
-              Tanınmayan rol değeri nedeniyle atlanan satırlar: {state.success.skipped.join(", ")}
-            </p>
+          {state.success.warnings.length > 0 && (
+            <ul className="list-disc pl-5 text-brand-red">
+              {state.success.warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
           )}
           {state.success.created.length === 0 ? (
             <p>Yeni hesap oluşturulmadı.</p>
