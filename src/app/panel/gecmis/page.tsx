@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, periodLabel } from "@/lib/data/panel";
 import { AidatCard, DemirbasCard, SicakSuCard } from "@/components/FigureCards";
+import { PrintButton } from "@/components/PrintButton";
 import { PeriodSelect } from "./PeriodSelect";
 
 export default async function GecmisPage({
@@ -24,11 +25,15 @@ export default async function GecmisPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted">Dönem seçin</h2>
-        <PeriodSelect
-          selectedId={selected.id}
-          options={periods.map((p) => ({ id: p.id, label: periodLabel(p) }))}
-        />
+        <div className="flex items-center gap-3 print:hidden">
+          <h2 className="text-sm font-medium text-muted">Dönem seçin</h2>
+          <PeriodSelect
+            selectedId={selected.id}
+            options={periods.map((p) => ({ id: p.id, label: periodLabel(p) }))}
+          />
+        </div>
+        <p className="hidden text-sm font-medium text-brand-navy print:block">{periodLabel(selected)}</p>
+        <PrintButton />
       </div>
       <AidatCard aidat={figures.aidat} />
       {account.role === "owner" && <DemirbasCard demirbas={figures.demirbas} />}

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, periodLabel } from "@/lib/data/panel";
 import { AidatCard, DemirbasCard, SicakSuCard } from "@/components/FigureCards";
+import { PrintButton } from "@/components/PrintButton";
 
 export default async function PanelPage() {
   const supabase = await createClient();
@@ -23,7 +24,10 @@ export default async function PanelPage() {
       <h1 className="text-3xl font-bold text-foreground">
         Hoş geldiniz{firstName ? `, ${firstName}` : ""}
       </h1>
-      <p className="text-sm font-medium text-brand-navy">{periodLabel(latest)}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-brand-navy">{periodLabel(latest)}</p>
+        <PrintButton />
+      </div>
       <AidatCard aidat={figures.aidat} />
       {account.role === "owner" && <DemirbasCard demirbas={figures.demirbas} />}
       <SicakSuCard sicakSu={figures.sicakSu} />

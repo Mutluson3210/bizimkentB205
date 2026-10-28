@@ -18,7 +18,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card print:hidden">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
           <Logo size={34} />
           <nav className="flex items-center gap-5">
