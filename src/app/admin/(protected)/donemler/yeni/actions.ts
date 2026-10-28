@@ -98,30 +98,89 @@ export async function uploadPeriodAction(
 
   const { data: existingPeriods, error: periodsError } = await supabase
     .from("periods")
-    .select("revision")
+    .select("id, revision")
     .eq("year", year)
     .eq("month", month)
     .order("revision", { ascending: false })
     .limit(1);
   if (periodsError) return { error: `Dönem sorgusu başarısız: ${periodsError.message}` };
 
-  const nextRevision = existingPeriods && existingPeriods.length > 0 ? existingPeriods[0].revision + 1 : 0;
   const label = `${AY_ADLARI[month - 1]} ${year}`;
+  const incomingAidatUnitIds = new Set(resolvedAidat.map(({ unitId }) => unitId!));
+  const incomingSicakSuUnitIds = new Set(resolvedSicakSu.map(({ unitId }) => unitId!));
+  const incomingUnitIds = new Set([...incomingAidatUnitIds, ...incomingSicakSuUnitIds]);
 
-  const { data: period, error: periodInsertError } = await supabase
-    .from("periods")
-    .insert({ year, month, label, revision: nextRevision, status: "published", published_at: new Date().toISOString() })
-    .select("id")
-    .single();
-  if (periodInsertError || !period) {
-    return { error: `Dönem oluşturulamadı: ${periodInsertError?.message}` };
+  let periodId: string;
+  let periodIsNew: boolean;
+
+  if (existingPeriods && existingPeriods.length > 0) {
+    const latest = existingPeriods[0];
+    // Bu yükleme, o dönemde zaten verisi olan herhangi bir daireyle çakışıyor mu?
+    // Çakışmıyorsa bu bir "düzeltme" değil, eksik blokları tamamlama — var olan
+    // döneme ekleriz, yeni revizyon açmayız (aksi halde diğer bloklar o yeni
+    // revizyonda "veri yok" görünür). Aidat ve sıcak su AYRI veri setleri — biri
+    // zaten doluyken diğerini tamamlamak da "çakışma" sayılmamalı, bu yüzden her
+    // ikisi kendi tablosuna karşı ayrı ayrı kontrol edilir.
+    const [{ data: existingAidatUnits }, { data: existingSicakSuUnits }] = await Promise.all([
+      supabase.from("aidat_kayit").select("unit_id").eq("period_id", latest.id),
+      supabase.from("sicak_su_kayit").select("unit_id").eq("period_id", latest.id),
+    ]);
+    const existingAidatUnitIds = new Set((existingAidatUnits ?? []).map((r) => r.unit_id));
+    const existingSicakSuUnitIds = new Set((existingSicakSuUnits ?? []).map((r) => r.unit_id));
+    const overlaps =
+      [...incomingAidatUnitIds].some((id) => existingAidatUnitIds.has(id)) ||
+      [...incomingSicakSuUnitIds].some((id) => existingSicakSuUnitIds.has(id));
+
+    if (!overlaps) {
+      periodId = latest.id;
+      periodIsNew = false;
+    } else {
+      const { data: period, error: periodInsertError } = await supabase
+        .from("periods")
+        .insert({
+          year,
+          month,
+          label,
+          revision: latest.revision + 1,
+          status: "published",
+          published_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      if (periodInsertError || !period) {
+        return { error: `Dönem oluşturulamadı: ${periodInsertError?.message}` };
+      }
+      periodId = period.id;
+      periodIsNew = true;
+    }
+  } else {
+    const { data: period, error: periodInsertError } = await supabase
+      .from("periods")
+      .insert({ year, month, label, revision: 0, status: "published", published_at: new Date().toISOString() })
+      .select("id")
+      .single();
+    if (periodInsertError || !period) {
+      return { error: `Dönem oluşturulamadı: ${periodInsertError?.message}` };
+    }
+    periodId = period.id;
+    periodIsNew = true;
   }
-  const periodId = period.id;
 
-  // Kısmi/tutarsız veri bırakmamak için: herhangi bir adım başarısız olursa
-  // dönemi (ve cascade ile o ana kadar eklenen satırları) geri al.
+  // Kısmi/tutarsız veri bırakmamak için: herhangi bir adım başarısız olursa geri
+  // al. Dönem bu çalışmada yeni oluşturulduysa tamamını sil; var olan bir döneme
+  // ekleme yapılıyorsa SADECE bu çalışmada eklenen daireleri sil — önceden var
+  // olan diğer blokların verisine dokunulmaz.
   async function rollback(message: string): Promise<UploadState> {
-    await supabase.from("periods").delete().eq("id", periodId);
+    if (periodIsNew) {
+      await supabase.from("periods").delete().eq("id", periodId);
+    } else {
+      const unitIds = Array.from(incomingUnitIds);
+      await Promise.all([
+        supabase.from("aidat_kayit").delete().eq("period_id", periodId).in("unit_id", unitIds),
+        supabase.from("demirbas_kayit").delete().eq("period_id", periodId).in("unit_id", unitIds),
+        supabase.from("sicak_su_kayit").delete().eq("period_id", periodId).in("unit_id", unitIds),
+      ]);
+    }
     return { error: message };
   }
 
