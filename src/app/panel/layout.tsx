@@ -28,6 +28,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             <Link href="/panel/gecmis" className={navLinkClass}>
               Geçmiş Aylar
             </Link>
+            <Link href="/panel/sifre-degistir" className={navLinkClass}>
+              Şifre Değiştir
+            </Link>
             <form action={logoutAction}>
               <button type="submit" className={navLinkClass}>
                 Çıkış
