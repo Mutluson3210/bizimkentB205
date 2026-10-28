@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, periodLabel } from "@/lib/data/panel";
-import { AidatCard, DemirbasCard, SicakSuCard } from "@/components/FigureCards";
+import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, getUnitHasActiveTenant, periodLabel } from "@/lib/data/panel";
+import { AidatCard, DemirbasCard, GenelToplamCard, SicakSuCard } from "@/components/FigureCards";
 import { PrintButton } from "@/components/PrintButton";
 import { PeriodSelect } from "./PeriodSelect";
 
@@ -20,7 +20,11 @@ export default async function GecmisPage({
 
   const { donem } = await searchParams;
   const selected = periods.find((p) => p.id === donem) ?? periods[0];
-  const figures = await getPeriodFigures(supabase, selected.id, account.unit_id);
+  const [figures, hasActiveTenant] = await Promise.all([
+    getPeriodFigures(supabase, selected.id, account.unit_id),
+    account.role === "owner" ? getUnitHasActiveTenant(supabase) : Promise.resolve(true),
+  ]);
+  const showGenelToplam = account.role === "owner" && !hasActiveTenant;
 
   return (
     <div className="flex flex-col gap-4">
@@ -37,6 +41,7 @@ export default async function GecmisPage({
       </div>
       <AidatCard aidat={figures.aidat} />
       {account.role === "owner" && <DemirbasCard demirbas={figures.demirbas} />}
+      {showGenelToplam && <GenelToplamCard aidat={figures.aidat} demirbas={figures.demirbas} />}
       <SicakSuCard sicakSu={figures.sicakSu} />
     </div>
   );

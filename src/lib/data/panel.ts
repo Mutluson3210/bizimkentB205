@@ -102,3 +102,12 @@ export function formatTl(value: number | null | undefined): string {
 export function periodLabel(p: { label: string; revision: number }): string {
   return p.revision > 0 ? `${p.label} — Düzeltme ${p.revision}` : p.label;
 }
+
+/** Oturum açan kullanıcının kendi dairesinde aktif bir kiracı hesabı var mı?
+ * (sadece bir boolean döner, başka hiçbir kişisel bilgi sızdırmaz — bkz.
+ * `public.unit_has_active_tenant` SQL fonksiyonu.) Ev sahibi tek başına
+ * oturuyorsa (kiracı yoksa) Aidat+Demirbaş genel toplamını göstermek için. */
+export async function getUnitHasActiveTenant(supabase: SupabaseServer): Promise<boolean> {
+  const { data } = await supabase.rpc("unit_has_active_tenant");
+  return data ?? false;
+}

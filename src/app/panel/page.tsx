@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, periodLabel } from "@/lib/data/panel";
-import { AidatCard, DemirbasCard, SicakSuCard } from "@/components/FigureCards";
+import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, getUnitHasActiveTenant, periodLabel } from "@/lib/data/panel";
+import { AidatCard, DemirbasCard, GenelToplamCard, SicakSuCard } from "@/components/FigureCards";
 import { PrintButton } from "@/components/PrintButton";
 
 export default async function PanelPage() {
@@ -15,9 +15,13 @@ export default async function PanelPage() {
     return <p className="text-sm text-muted">Henüz yayınlanmış bir dönem bulunmuyor.</p>;
   }
 
-  const figures = await getPeriodFigures(supabase, latest.id, account.unit_id);
+  const [figures, hasActiveTenant] = await Promise.all([
+    getPeriodFigures(supabase, latest.id, account.unit_id),
+    account.role === "owner" ? getUnitHasActiveTenant(supabase) : Promise.resolve(true),
+  ]);
 
   const firstName = account.full_name.trim().split(/\s+/)[0];
+  const showGenelToplam = account.role === "owner" && !hasActiveTenant;
 
   return (
     <div className="flex flex-col gap-4">
@@ -30,6 +34,7 @@ export default async function PanelPage() {
       </div>
       <AidatCard aidat={figures.aidat} />
       {account.role === "owner" && <DemirbasCard demirbas={figures.demirbas} />}
+      {showGenelToplam && <GenelToplamCard aidat={figures.aidat} demirbas={figures.demirbas} />}
       <SicakSuCard sicakSu={figures.sicakSu} />
     </div>
   );

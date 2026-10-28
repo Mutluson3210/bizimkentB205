@@ -58,6 +58,31 @@ export function DemirbasCard({ demirbas }: { demirbas: PeriodFigures["demirbas"]
   );
 }
 
+/** Dairede kiracı yoksa (ev sahibi kendisi oturuyorsa) Aidat+Demirbaş'ı tek
+ * kalemde ödeyecektir — bu yüzden ikisinin toplamı ayrıca gösterilir. */
+export function GenelToplamCard({
+  aidat,
+  demirbas,
+}: {
+  aidat: PeriodFigures["aidat"];
+  demirbas: PeriodFigures["demirbas"];
+}) {
+  if (!aidat || !demirbas) return null;
+  const genelToplam = aidat.toplam + demirbas.toplam;
+
+  return (
+    <section className="rounded-xl border border-brand-navy bg-brand-navy px-5 py-4 text-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold">Genel Toplam</h2>
+          <p className="text-xs text-white/70">Aidat + Demirbaş (kiracı olmadığından tek ödeme)</p>
+        </div>
+        <span className="text-xl font-bold tabular-nums">{formatTl(genelToplam)}</span>
+      </div>
+    </section>
+  );
+}
+
 export function SicakSuCard({ sicakSu }: { sicakSu: PeriodFigures["sicakSu"] }) {
   if (!sicakSu) return null;
 
