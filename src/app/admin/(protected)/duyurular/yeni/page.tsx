@@ -24,6 +24,11 @@ export default function YeniDuyuruPage() {
           <textarea name="body" required rows={6} className={inputClass} />
         </label>
 
+        <label className={labelClass}>
+          Görsel veya Dosya Eki (opsiyonel)
+          <input name="attachment" type="file" className={inputClass} />
+        </label>
+
         {state.error && <p className={errorBoxClass}>{state.error}</p>}
 
         <button type="submit" disabled={pending} className={primaryButtonClass}>

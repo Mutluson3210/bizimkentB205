@@ -10,3 +10,11 @@ export async function getAnnouncements(supabase: SupabaseServer): Promise<Tables
     .order("created_at", { ascending: false });
   return data ?? [];
 }
+
+export async function getAnnouncementAttachmentUrl(
+  supabase: SupabaseServer,
+  path: string,
+): Promise<string | null> {
+  const { data } = await supabase.storage.from("duyuru-ekleri").createSignedUrl(path, 60 * 10);
+  return data?.signedUrl ?? null;
+}

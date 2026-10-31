@@ -111,18 +111,21 @@ export type Database = {
       }
       announcements: {
         Row: {
+          attachment_path: string | null
           body: string
           created_at: string
           id: string
           title: string
         }
         Insert: {
+          attachment_path?: string | null
           body: string
           created_at?: string
           id?: string
           title: string
         }
         Update: {
+          attachment_path?: string | null
           body?: string
           created_at?: string
           id?: string

@@ -1,10 +1,17 @@
 import Link from "next/link";
-import { getAllAnnouncements } from "@/lib/data/admin";
-import { cardClass, primaryButtonClass } from "@/lib/ui";
+import { getAllAnnouncements, getAnnouncementAttachmentUrl } from "@/lib/data/admin";
+import { cardClass, linkClass, primaryButtonClass } from "@/lib/ui";
+import { isImageFile, stripUuidPrefix } from "@/lib/files";
 import { deleteAnnouncementAction } from "./actions";
 
 export default async function DuyurularPage() {
   const announcements = await getAllAnnouncements();
+  const withAttachments = await Promise.all(
+    announcements.map(async (a) => ({
+      ...a,
+      attachmentUrl: a.attachment_path ? await getAnnouncementAttachmentUrl(a.attachment_path) : null,
+    })),
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -15,11 +22,11 @@ export default async function DuyurularPage() {
         </Link>
       </div>
 
-      {announcements.length === 0 ? (
+      {withAttachments.length === 0 ? (
         <p className={`${cardClass} text-sm text-muted`}>Henüz hiç duyuru yayınlanmadı.</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {announcements.map((a) => (
+          {withAttachments.map((a) => (
             <section key={a.id} className={cardClass}>
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -35,6 +42,18 @@ export default async function DuyurularPage() {
                 </form>
               </div>
               <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">{a.body}</p>
+              {a.attachmentUrl && a.attachment_path && (
+                <div className="mt-3">
+                  {isImageFile(a.attachment_path) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.attachmentUrl} alt={a.title} className="max-h-64 rounded-lg border border-border" />
+                  ) : (
+                    <a href={a.attachmentUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                      📎 {stripUuidPrefix(a.attachment_path)}
+                    </a>
+                  )}
+                </div>
+              )}
             </section>
           ))}
         </div>

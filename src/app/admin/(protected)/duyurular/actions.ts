@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createAnnouncement, deleteAnnouncement } from "@/lib/data/admin";
+import { createAnnouncement, deleteAnnouncement, uploadAnnouncementAttachment } from "@/lib/data/admin";
 
 export type CreateAnnouncementState = { error?: string };
 
@@ -12,12 +12,22 @@ export async function createAnnouncementAction(
 ): Promise<CreateAnnouncementState> {
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
+  const file = formData.get("attachment");
 
   if (!title || !body) {
     return { error: "Başlık ve içerik boş olamaz." };
   }
 
-  await createAnnouncement(title, body);
+  let attachmentPath: string | null = null;
+  if (file instanceof File && file.size > 0) {
+    try {
+      attachmentPath = await uploadAnnouncementAttachment(file);
+    } catch {
+      return { error: "Dosya yüklenemedi, lütfen tekrar deneyin." };
+    }
+  }
+
+  await createAnnouncement(title, body, attachmentPath);
   redirect("/admin/duyurular");
 }
 

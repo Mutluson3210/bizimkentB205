@@ -173,16 +173,40 @@ export async function getAllAnnouncements() {
   return data ?? [];
 }
 
-export async function createAnnouncement(title: string, body: string) {
+export async function uploadAnnouncementAttachment(file: File): Promise<string> {
   const supabase = createServiceClient();
-  const { error } = await supabase.from("announcements").insert({ title, body });
+  const path = `${crypto.randomUUID()}-${file.name}`;
+  const { error } = await supabase.storage.from("duyuru-ekleri").upload(path, file);
+  if (error) throw error;
+  return path;
+}
+
+export async function createAnnouncement(title: string, body: string, attachmentPath?: string | null) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("announcements").insert({ title, body, attachment_path: attachmentPath ?? null });
   if (error) throw error;
 }
 
 export async function deleteAnnouncement(id: string) {
   const supabase = createServiceClient();
+  const { data: existing } = await supabase
+    .from("announcements")
+    .select("attachment_path")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await supabase.from("announcements").delete().eq("id", id);
   if (error) throw error;
+
+  if (existing?.attachment_path) {
+    await supabase.storage.from("duyuru-ekleri").remove([existing.attachment_path]);
+  }
+}
+
+export async function getAnnouncementAttachmentUrl(path: string): Promise<string | null> {
+  const supabase = createServiceClient();
+  const { data } = await supabase.storage.from("duyuru-ekleri").createSignedUrl(path, 60 * 10);
+  return data?.signedUrl ?? null;
 }
 
 // --- Dashboard özet istatistikleri ---
