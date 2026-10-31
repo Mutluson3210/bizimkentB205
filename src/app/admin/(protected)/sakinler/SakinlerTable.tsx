@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { badgeClass, inputClass } from "@/lib/ui";
-import { toggleAccountActiveAction } from "./actions";
+import { toggleAccountActiveAction, updateAccountAction, type UpdateAccountState } from "./actions";
 
 type AccountRow = {
   id: string;
@@ -21,6 +21,95 @@ type UnitRow = {
 
 function normalize(s: string): string {
   return s.toLocaleLowerCase("tr-TR");
+}
+
+const initialUpdateState: UpdateAccountState = {};
+
+function AccountCells({ acc }: { acc: AccountRow }) {
+  const [editing, setEditing] = useState(false);
+  const [state, formAction, pending] = useActionState(
+    updateAccountAction.bind(null, acc.id),
+    initialUpdateState,
+  );
+
+  useEffect(() => {
+    if (state.success) setEditing(false);
+  }, [state]);
+
+  if (editing) {
+    const formId = `edit-form-${acc.id}`;
+    return (
+      <>
+        <td className="border-b border-border py-2">
+          <form id={formId} action={formAction}>
+            <input name="fullName" defaultValue={acc.full_name} required className={`w-full ${inputClass}`} />
+          </form>
+        </td>
+        <td className="border-b border-border py-2">
+          <input
+            name="phone"
+            form={formId}
+            defaultValue={acc.phone ?? ""}
+            placeholder="Telefon"
+            className={`w-full ${inputClass}`}
+          />
+        </td>
+        <td className="border-b border-border">
+          <span className={badgeClass(acc.is_active ? "green" : "gray")}>
+            {acc.is_active ? "Aktif" : "Pasif"}
+          </span>
+        </td>
+        <td className="border-b border-border pr-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              form={formId}
+              disabled={pending}
+              className="text-xs font-medium text-brand-navy hover:underline disabled:opacity-50"
+            >
+              {pending ? "Kaydediliyor..." : "Kaydet"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="text-xs font-medium text-muted hover:underline"
+            >
+              İptal
+            </button>
+          </div>
+          {state.error && <p className="mt-1 text-xs text-brand-red">{state.error}</p>}
+        </td>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <td className="border-b border-border text-foreground">{acc.full_name}</td>
+      <td className="border-b border-border text-muted">{acc.phone ?? "-"}</td>
+      <td className="border-b border-border">
+        <span className={badgeClass(acc.is_active ? "green" : "gray")}>
+          {acc.is_active ? "Aktif" : "Pasif"}
+        </span>
+      </td>
+      <td className="border-b border-border pr-4">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-xs font-medium text-brand-navy hover:underline"
+          >
+            Düzenle
+          </button>
+          <form action={toggleAccountActiveAction.bind(null, acc.id, !acc.is_active)}>
+            <button type="submit" className="text-xs font-medium text-brand-navy hover:underline">
+              {acc.is_active ? "Pasifleştir" : "Aktifleştir"}
+            </button>
+          </form>
+        </div>
+      </td>
+    </>
+  );
 }
 
 export function SakinlerTable({ units }: { units: UnitRow[] }) {
@@ -88,20 +177,7 @@ export function SakinlerTable({ units }: { units: UnitRow[] }) {
                     </td>
                   )}
                   <td className="border-b border-border text-foreground">{acc.role === "owner" ? "Ev Sahibi" : "Kiracı"}</td>
-                  <td className="border-b border-border text-foreground">{acc.full_name}</td>
-                  <td className="border-b border-border text-muted">{acc.phone ?? "-"}</td>
-                  <td className="border-b border-border">
-                    <span className={badgeClass(acc.is_active ? "green" : "gray")}>
-                      {acc.is_active ? "Aktif" : "Pasif"}
-                    </span>
-                  </td>
-                  <td className="border-b border-border pr-4">
-                    <form action={toggleAccountActiveAction.bind(null, acc.id, !acc.is_active)}>
-                      <button type="submit" className="text-xs font-medium text-brand-navy hover:underline">
-                        {acc.is_active ? "Pasifleştir" : "Aktifleştir"}
-                      </button>
-                    </form>
-                  </td>
+                  <AccountCells acc={acc} />
                 </tr>
               ));
             })}
