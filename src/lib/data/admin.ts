@@ -149,3 +149,67 @@ export async function getPeriodDetail(periodId: string) {
 
   return { period, units: detailUnits };
 }
+
+// --- Duyurular ---
+
+export async function getAllAnnouncements() {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("announcements")
+    .select("*")
+    .order("created_at", { ascending: false });
+  return data ?? [];
+}
+
+export async function createAnnouncement(title: string, body: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("announcements").insert({ title, body });
+  if (error) throw error;
+}
+
+export async function deleteAnnouncement(id: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("announcements").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// --- Dashboard özet istatistikleri ---
+
+export async function getLatestPeriodSummary() {
+  const supabase = createServiceClient();
+  const { data: latest } = await supabase
+    .from("periods")
+    .select("id, label, revision")
+    .order("year", { ascending: false })
+    .order("month", { ascending: false })
+    .order("revision", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!latest) return null;
+
+  const [{ data: aidatRows }, { data: demirbasRows }, { count: gecikmedeAidat }, { count: gecikmedeDemirbas }] =
+    await Promise.all([
+      supabase.from("aidat_kayit").select("toplam").eq("period_id", latest.id),
+      supabase.from("demirbas_kayit").select("toplam").eq("period_id", latest.id),
+      supabase
+        .from("aidat_kayit")
+        .select("*", { count: "exact", head: true })
+        .eq("period_id", latest.id)
+        .gt("gecikme_tazminati", 0),
+      supabase
+        .from("demirbas_kayit")
+        .select("*", { count: "exact", head: true })
+        .eq("period_id", latest.id)
+        .gt("gecikme_tazminati", 0),
+    ]);
+
+  const toplamAidat = (aidatRows ?? []).reduce((sum, r) => sum + r.toplam, 0);
+  const toplamDemirbas = (demirbasRows ?? []).reduce((sum, r) => sum + r.toplam, 0);
+
+  return {
+    periodLabel: latest.label,
+    toplamTahsilEdilecek: toplamAidat + toplamDemirbas,
+    gecikmedekiDaireSayisi: (gecikmedeAidat ?? 0) + (gecikmedeDemirbas ?? 0),
+  };
+}

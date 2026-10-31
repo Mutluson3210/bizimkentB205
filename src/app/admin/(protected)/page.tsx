@@ -1,20 +1,42 @@
 import Link from "next/link";
-import { getAllPeriodsWithCounts, getMonthlySmsUsage } from "@/lib/data/admin";
-import { periodLabel } from "@/lib/data/panel";
+import { getAllPeriodsWithCounts, getMonthlySmsUsage, getLatestPeriodSummary } from "@/lib/data/admin";
+import { periodLabel, formatTl } from "@/lib/data/panel";
 import { badgeClass, cardClass, primaryButtonClass } from "@/lib/ui";
 
 export default async function AdminDashboardPage() {
-  const [periods, smsUsage] = await Promise.all([getAllPeriodsWithCounts(), getMonthlySmsUsage()]);
+  const [periods, smsUsage, summary] = await Promise.all([
+    getAllPeriodsWithCounts(),
+    getMonthlySmsUsage(),
+    getLatestPeriodSummary(),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-foreground">Dönemler</h2>
-          <span className={badgeClass(smsUsage.used >= smsUsage.limit ? "red" : "navy")}>
-            Bu ay SMS: {smsUsage.used} / {smsUsage.limit}
-          </span>
+      {summary && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className={cardClass}>
+            <p className="text-xs text-muted">{summary.periodLabel} — Toplam Tahsil Edilecek</p>
+            <p className="mt-1 text-xl font-bold tabular-nums text-brand-navy">
+              {formatTl(summary.toplamTahsilEdilecek)}
+            </p>
+          </div>
+          <div className={cardClass}>
+            <p className="text-xs text-muted">Gecikmedeki Kalem Sayısı</p>
+            <p className="mt-1 text-xl font-bold tabular-nums text-brand-red">
+              {summary.gecikmedekiDaireSayisi}
+            </p>
+          </div>
+          <div className={cardClass}>
+            <p className="text-xs text-muted">Bu Ay Gönderilen SMS</p>
+            <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
+              {smsUsage.used} / {smsUsage.limit}
+            </p>
+          </div>
         </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">Dönemler</h2>
         <Link href="/admin/donemler/yeni" className={primaryButtonClass}>
           Yeni Dönem Yükle
         </Link>

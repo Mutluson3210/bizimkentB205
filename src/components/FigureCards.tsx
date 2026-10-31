@@ -23,9 +23,24 @@ function TotalRow({ value }: { value: number | null | undefined }) {
   );
 }
 
+type Badge = { tone: "navy" | "green" | "red" | "gray"; text: string };
+
+/** Önceki aydan devreden bakiyeye göre ek bir uyarı/bilgi rozeti üretir:
+ * pozitifse ödenmemiş borç devretmiş, negatifse fazla ödeme var (alacaklı). */
+function devirBadge(devir: number | null | undefined): Badge | null {
+  if (devir == null || devir === 0) return null;
+  return devir > 0
+    ? { tone: "red", text: "Gecikmiş Borç Var" }
+    : { tone: "green", text: "Alacaklısınız" };
+}
+
 export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
+  const badges: Badge[] = [{ tone: "navy", text: "Kiracı ve ev sahibi görür" }];
+  const devir = devirBadge(aidat?.onceki_aydan_devir);
+  if (devir) badges.push(devir);
+
   return (
-    <Card title="Aidat" badge={{ tone: "navy", text: "Kiracı ve ev sahibi görür" }}>
+    <Card title="Aidat" badges={badges}>
       {!aidat ? (
         <EmptyNote />
       ) : (
@@ -43,8 +58,12 @@ export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
 }
 
 export function DemirbasCard({ demirbas }: { demirbas: PeriodFigures["demirbas"] }) {
+  const badges: Badge[] = [{ tone: "green", text: "Ev sahibine aittir" }];
+  const devir = devirBadge(demirbas?.onceki_aydan_devir);
+  if (devir) badges.push(devir);
+
   return (
-    <Card title="Demirbaş" badge={{ tone: "green", text: "Ev sahibine aittir" }}>
+    <Card title="Demirbaş" badges={badges}>
       {!demirbas ? (
         <EmptyNote />
       ) : (
@@ -110,19 +129,27 @@ function EmptyNote() {
 function Card({
   title,
   subtitle,
-  badge,
+  badges,
   children,
 }: {
   title: string;
   subtitle?: string;
-  badge?: { tone: "navy" | "green" | "red" | "gray"; text: string };
+  badges?: Badge[];
   children: React.ReactNode;
 }) {
   return (
     <section className={cardClass}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold text-foreground">{title}</h2>
-        {badge && <span className={badgeClass(badge.tone)}>{badge.text}</span>}
+        {badges && badges.length > 0 && (
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            {badges.map((b) => (
+              <span key={b.text} className={badgeClass(b.tone)}>
+                {b.text}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
       <div className="mt-2 divide-y divide-border">{children}</div>

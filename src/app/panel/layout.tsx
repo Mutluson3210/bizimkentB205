@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAccount } from "@/lib/data/panel";
 import { Logo } from "@/components/Logo";
+import { Footer } from "@/components/Footer";
 import { navLinkClass } from "@/lib/ui";
 import { logoutAction } from "./actions";
 
@@ -21,12 +22,18 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       <header className="border-b border-border bg-card print:hidden">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
           <Logo size={34} />
-          <nav className="flex items-center gap-5">
+          <nav className="flex flex-wrap items-center gap-4">
             <Link href="/panel" className={navLinkClass}>
               Güncel Ay
             </Link>
             <Link href="/panel/gecmis" className={navLinkClass}>
               Geçmiş Aylar
+            </Link>
+            <Link href="/panel/duyurular" className={navLinkClass}>
+              Duyurular
+            </Link>
+            <Link href="/panel/belgeler" className={navLinkClass}>
+              Belgeler
             </Link>
             <Link href="/panel/sifre-degistir" className={navLinkClass}>
               Şifre Değiştir
@@ -51,6 +58,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           </span>
         </div>
         {children}
+        <Footer />
       </div>
     </div>
   );
