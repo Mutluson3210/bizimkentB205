@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Logo } from "@/components/Logo";
+import { SiteSeal } from "@/components/Logo";
 import { cardClass, errorBoxClass, inputClass, labelClass, primaryButtonClass } from "@/lib/ui";
 import { adminLoginAction, type AdminLoginState } from "./actions";
 
@@ -12,7 +12,7 @@ export default function AdminGirisPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-12">
-      <Logo size={44} subtitle="Yönetim Girişi" />
+      <SiteSeal size={120} subtitle="Yönetim Girişi" />
 
       <form action={formAction} className={`flex w-full max-w-sm flex-col gap-4 ${cardClass}`}>
         <label className={labelClass}>

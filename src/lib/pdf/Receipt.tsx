@@ -139,7 +139,8 @@ export function Receipt({
         )}
 
         <View style={styles.footer}>
-          <Text>{BANKA_HESAP_ADI}</Text>
+          <Text style={{ fontWeight: 700, color: "#16213e" }}>Garanti Bankası Site Hesabı Bilgileri</Text>
+          <Text style={{ marginTop: 2 }}>{BANKA_HESAP_ADI}</Text>
           <Text>IBAN: {IBAN}</Text>
           <Text style={{ marginTop: 4 }}>
             Bu makbuz {generatedAt.toLocaleString("tr-TR")} tarihinde otomatik oluşturulmuştur.

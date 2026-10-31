@@ -49,10 +49,20 @@ export async function getUnitsWithAccounts() {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("units")
-    .select("id, daire_no, unit_no, blocks(code, name), accounts(id, role, full_name, phone, is_active, synthetic_email)")
-    .order("daire_no");
+    .select("id, daire_no, unit_no, blocks(code, name), accounts(id, role, full_name, phone, is_active, synthetic_email)");
   if (error) throw error;
-  return data ?? [];
+
+  // "daire_no" metin olduğu için D11 bloğunun sıfırsız numaralarını
+  // (D11-1, D11-2, ... D11-10) yanlış sıralardı (D11-1, D11-10, D11-11, ...,
+  // D11-2, ...). PostgREST'in referencedTable sıralaması üst tabloyu
+  // etkilemediğinden (bire-bir ilişkide sadece gömülü satırı sıralar),
+  // blok koduna sonra sayısal unit_no'ya göre burada, JS'de sıralanır.
+  return (data ?? []).slice().sort((a, b) => {
+    const blockA = (a.blocks as { code: string } | null)?.code ?? "";
+    const blockB = (b.blocks as { code: string } | null)?.code ?? "";
+    if (blockA !== blockB) return blockA.localeCompare(blockB);
+    return a.unit_no - b.unit_no;
+  });
 }
 
 function startOfMonthIso(): string {

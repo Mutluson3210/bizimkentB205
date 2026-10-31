@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import { SiteSeal } from "@/components/Logo";
 import { cardClass, errorBoxClass, inputClass, labelClass, linkClass, primaryButtonClass } from "@/lib/ui";
 import { loginAction, type LoginState } from "./actions";
 
@@ -13,7 +13,7 @@ export default function GirisPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-12">
-      <Logo size={44} subtitle="Sakin Girişi" />
+      <SiteSeal size={120} subtitle="Sakin Girişi" />
 
       <form action={formAction} className={`flex w-full max-w-sm flex-col gap-4 ${cardClass}`}>
         <label className={labelClass}>
