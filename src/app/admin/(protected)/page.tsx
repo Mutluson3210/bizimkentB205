@@ -13,7 +13,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       {summary && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className={cardClass}>
             <p className="text-xs text-muted">{summary.periodLabel} — Toplam Tahsil Edilecek</p>
             <p className="mt-1 text-xl font-bold tabular-nums text-brand-navy">
@@ -24,6 +24,12 @@ export default async function AdminDashboardPage() {
             <p className="text-xs text-muted">Gecikmedeki Kalem Sayısı</p>
             <p className="mt-1 text-xl font-bold tabular-nums text-brand-red">
               {summary.gecikmedekiDaireSayisi}
+            </p>
+          </div>
+          <div className={cardClass}>
+            <p className="text-xs text-muted">Gecikme Tutarları Toplamı</p>
+            <p className="mt-1 text-xl font-bold tabular-nums text-brand-red">
+              {formatTl(summary.gecikmeTutariToplami)}
             </p>
           </div>
           <div className={cardClass}>

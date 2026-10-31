@@ -198,28 +198,22 @@ export async function getLatestPeriodSummary() {
 
   if (!latest) return null;
 
-  const [{ data: aidatRows }, { data: demirbasRows }, { count: gecikmedeAidat }, { count: gecikmedeDemirbas }] =
-    await Promise.all([
-      supabase.from("aidat_kayit").select("toplam").eq("period_id", latest.id),
-      supabase.from("demirbas_kayit").select("toplam").eq("period_id", latest.id),
-      supabase
-        .from("aidat_kayit")
-        .select("*", { count: "exact", head: true })
-        .eq("period_id", latest.id)
-        .gt("gecikme_tazminati", 0),
-      supabase
-        .from("demirbas_kayit")
-        .select("*", { count: "exact", head: true })
-        .eq("period_id", latest.id)
-        .gt("gecikme_tazminati", 0),
-    ]);
+  const [{ data: aidatRows }, { data: demirbasRows }] = await Promise.all([
+    supabase.from("aidat_kayit").select("toplam, gecikme_tazminati").eq("period_id", latest.id),
+    supabase.from("demirbas_kayit").select("toplam, gecikme_tazminati").eq("period_id", latest.id),
+  ]);
 
   const toplamAidat = (aidatRows ?? []).reduce((sum, r) => sum + r.toplam, 0);
   const toplamDemirbas = (demirbasRows ?? []).reduce((sum, r) => sum + r.toplam, 0);
+  const gecikmedeAidat = (aidatRows ?? []).filter((r) => r.gecikme_tazminati > 0).length;
+  const gecikmedeDemirbas = (demirbasRows ?? []).filter((r) => r.gecikme_tazminati > 0).length;
+  const gecikmeTutariAidat = (aidatRows ?? []).reduce((sum, r) => sum + r.gecikme_tazminati, 0);
+  const gecikmeTutariDemirbas = (demirbasRows ?? []).reduce((sum, r) => sum + r.gecikme_tazminati, 0);
 
   return {
     periodLabel: latest.label,
     toplamTahsilEdilecek: toplamAidat + toplamDemirbas,
-    gecikmedekiDaireSayisi: (gecikmedeAidat ?? 0) + (gecikmedeDemirbas ?? 0),
+    gecikmedekiDaireSayisi: gecikmedeAidat + gecikmedeDemirbas,
+    gecikmeTutariToplami: gecikmeTutariAidat + gecikmeTutariDemirbas,
   };
 }
