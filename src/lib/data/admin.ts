@@ -224,5 +224,6 @@ export async function getLatestPeriodSummary() {
     toplamTahsilEdilecek: toplamAidat + toplamDemirbas,
     gecikmedekiDaireSayisi: gecikmedeAidat + gecikmedeDemirbas,
     gecikmeTutariToplami: gecikmeTutariAidat + gecikmeTutariDemirbas,
+    odenmeyenDemirbasToplami: gecikmeTutariDemirbas,
   };
 }
