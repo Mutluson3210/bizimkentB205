@@ -13,30 +13,33 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       {summary && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className={cardClass}>
-            <p className="text-xs text-muted">{summary.periodLabel} — Toplam Tahsil Edilecek</p>
-            <p className="mt-1 text-xl font-bold tabular-nums text-brand-navy">
-              {formatTl(summary.toplamTahsilEdilecek)}
-            </p>
-          </div>
-          <div className={cardClass}>
-            <p className="text-xs text-muted">Gecikmedeki Kalem Sayısı</p>
-            <p className="mt-1 text-xl font-bold tabular-nums text-brand-red">
-              {summary.gecikmedekiDaireSayisi}
-            </p>
-          </div>
-          <div className={cardClass}>
-            <p className="text-xs text-muted">Gecikme Tutarları Toplamı</p>
-            <p className="mt-1 text-xl font-bold tabular-nums text-brand-red">
-              {formatTl(summary.gecikmeTutariToplami)}
-            </p>
-          </div>
-          <div className={cardClass}>
-            <p className="text-xs text-muted">Bu Ay Gönderilen SMS</p>
-            <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
-              {smsUsage.used} / {smsUsage.limit}
-            </p>
+        <div className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold text-foreground">Aylık İstatistikler</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className={cardClass}>
+              <p className="text-xs text-muted">{summary.periodLabel} — Toplam Tahsil Edilecek</p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-brand-navy">
+                {formatTl(summary.toplamTahsilEdilecek)}
+              </p>
+            </div>
+            <div className={cardClass}>
+              <p className="text-xs text-muted">Gecikmedeki Kalem Sayısı</p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-brand-red">
+                {summary.gecikmedekiDaireSayisi}
+              </p>
+            </div>
+            <div className={cardClass}>
+              <p className="text-xs text-muted">Gecikme Tutarları Toplamı</p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-brand-red">
+                {formatTl(summary.gecikmeTutariToplami)}
+              </p>
+            </div>
+            <div className={cardClass}>
+              <p className="text-xs text-muted">Bu Ay Gönderilen SMS</p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
+                {smsUsage.used} / {smsUsage.limit}
+              </p>
+            </div>
           </div>
         </div>
       )}
