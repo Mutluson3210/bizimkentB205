@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { SiteSeal } from "@/components/Logo";
-import { cardClass, errorBoxClass, inputClass, labelClass, primaryButtonClass } from "@/lib/ui";
+import { cardClass, errorBoxClass, inputClass, labelClass, linkClass, primaryButtonClass } from "@/lib/ui";
 import { adminLoginAction, type AdminLoginState } from "./actions";
 
 const initialState: AdminLoginState = {};
@@ -30,6 +31,10 @@ export default function AdminGirisPage() {
         <button type="submit" disabled={pending} className={`${primaryButtonClass} mt-1 w-full`}>
           {pending ? "Giriş yapılıyor..." : "Giriş Yap"}
         </button>
+
+        <Link href="/admin/giris/sifremi-unuttum" className={`${linkClass} text-center`}>
+          Şifremi unuttum
+        </Link>
       </form>
     </main>
   );

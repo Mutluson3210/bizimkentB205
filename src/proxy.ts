@@ -30,7 +30,7 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const isAdminArea = pathname.startsWith("/admin") && pathname !== "/admin/giris";
+  const isAdminArea = pathname.startsWith("/admin") && !pathname.startsWith("/admin/giris");
   const isResidentArea = pathname.startsWith("/panel");
 
   if (isAdminArea && !isAdminEmail(user?.email)) {

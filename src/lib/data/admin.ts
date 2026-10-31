@@ -129,7 +129,9 @@ export async function getPeriodDetail(periodId: string) {
   const demirbasByUnit = new Map((demirbasRows ?? []).map((r) => [r.unit_id, r.toplam]));
   const lastSmsByAccount = new Map<string, { status: string; created_at: string }>();
   for (const row of smsRows ?? []) {
-    if (!lastSmsByAccount.has(row.account_id)) {
+    // Borç bildirimi SMS'i her zaman bir sakin hesabına gider (admin OTP'si
+    // `account_id` olmadan, ayrı bir "admin_password_reset" akışı kullanır).
+    if (row.account_id && !lastSmsByAccount.has(row.account_id)) {
       lastSmsByAccount.set(row.account_id, { status: row.status, created_at: row.created_at });
     }
   }
@@ -199,16 +201,23 @@ export async function getLatestPeriodSummary() {
   if (!latest) return null;
 
   const [{ data: aidatRows }, { data: demirbasRows }] = await Promise.all([
-    supabase.from("aidat_kayit").select("toplam, gecikme_tazminati").eq("period_id", latest.id),
-    supabase.from("demirbas_kayit").select("toplam, gecikme_tazminati").eq("period_id", latest.id),
+    supabase.from("aidat_kayit").select("toplam, onceki_aydan_devir, gecikme_tazminati").eq("period_id", latest.id),
+    supabase.from("demirbas_kayit").select("toplam, onceki_aydan_devir, gecikme_tazminati").eq("period_id", latest.id),
   ]);
 
   const toplamAidat = (aidatRows ?? []).reduce((sum, r) => sum + r.toplam, 0);
   const toplamDemirbas = (demirbasRows ?? []).reduce((sum, r) => sum + r.toplam, 0);
   const gecikmedeAidat = (aidatRows ?? []).filter((r) => r.gecikme_tazminati > 0).length;
   const gecikmedeDemirbas = (demirbasRows ?? []).filter((r) => r.gecikme_tazminati > 0).length;
-  const gecikmeTutariAidat = (aidatRows ?? []).reduce((sum, r) => sum + r.gecikme_tazminati, 0);
-  const gecikmeTutariDemirbas = (demirbasRows ?? []).reduce((sum, r) => sum + r.gecikme_tazminati, 0);
+  // "gecikme_tazminati" sadece devreden borcun üzerine eklenen %5'lik ceza
+  // (çok küçük); asıl geciken borç tutarı "onceki_aydan_devir" (pozitif
+  // olanlar — negatif devir alacaklı demek, gecikme değil).
+  const gecikmeTutariAidat = (aidatRows ?? [])
+    .filter((r) => r.onceki_aydan_devir > 0)
+    .reduce((sum, r) => sum + r.onceki_aydan_devir, 0);
+  const gecikmeTutariDemirbas = (demirbasRows ?? [])
+    .filter((r) => r.onceki_aydan_devir > 0)
+    .reduce((sum, r) => sum + r.onceki_aydan_devir, 0);
 
   return {
     periodLabel: latest.label,

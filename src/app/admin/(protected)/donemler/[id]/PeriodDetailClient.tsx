@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { badgeClass } from "@/lib/ui";
 import { formatTl } from "@/lib/data/panel";
 import type { PeriodDetailUnit } from "@/lib/data/admin";
@@ -60,6 +60,13 @@ export function PeriodDetailClient({
     setSelected((prev) => (prev.size === allEligibleIds.length ? new Set() : new Set(allEligibleIds)));
   }
 
+  const allSelected = allEligibleIds.length > 0 && selected.size === allEligibleIds.length;
+  const someSelected = selected.size > 0 && !allSelected;
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected;
+  }, [someSelected]);
+
   return (
     <div className="flex flex-col gap-4">
       {autoRunning && (
@@ -84,9 +91,16 @@ export function PeriodDetailClient({
         ))}
 
         <div className="flex items-center justify-between">
-          <button type="button" onClick={toggleAll} className="text-sm font-medium text-brand-navy hover:underline">
-            {selected.size === allEligibleIds.length ? "Tümünü Kaldır" : "Tümünü Seç"}
-          </button>
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <input
+              ref={selectAllRef}
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleAll}
+              className="h-4 w-4 accent-brand-navy"
+            />
+            Tümünü Seç ({allEligibleIds.length} uygun hesap)
+          </label>
           <button
             type="submit"
             disabled={sendPending || selected.size === 0}
@@ -108,12 +122,12 @@ export function PeriodDetailClient({
             <thead>
               <tr className="text-left text-muted">
                 <th className="border-b border-border py-3 pl-4">Daire</th>
-                <th className="border-b border-border">Aidat</th>
-                <th className="border-b border-border">Demirbaş</th>
+                <th className="border-b border-border">Gönder</th>
                 <th className="border-b border-border">Hesap</th>
                 <th className="border-b border-border">Telefon</th>
                 <th className="border-b border-border">Son SMS</th>
-                <th className="border-b border-border pr-4">Gönder</th>
+                <th className="border-b border-border">Aidat</th>
+                <th className="border-b border-border pr-4">Demirbaş</th>
               </tr>
             </thead>
             <tbody>
@@ -122,17 +136,9 @@ export function PeriodDetailClient({
                 return rows.map((acc, i) => (
                   <tr key={`${unit.unitId}-${i}`}>
                     {i === 0 && (
-                      <>
-                        <td className="border-b border-border py-3 pl-4 font-medium text-foreground" rowSpan={rows.length}>
-                          {unit.daireNo}
-                        </td>
-                        <td className="border-b border-border tabular-nums text-foreground" rowSpan={rows.length}>
-                          {formatTl(unit.aidatToplam)}
-                        </td>
-                        <td className="border-b border-border tabular-nums text-foreground" rowSpan={rows.length}>
-                          {unit.demirbasToplam !== null ? formatTl(unit.demirbasToplam) : "-"}
-                        </td>
-                      </>
+                      <td className="border-b border-border py-3 pl-4 font-medium text-foreground" rowSpan={rows.length}>
+                        {unit.daireNo}
+                      </td>
                     )}
                     {!acc ? (
                       <td colSpan={4} className="border-b border-border pr-4 text-muted">
@@ -140,6 +146,18 @@ export function PeriodDetailClient({
                       </td>
                     ) : (
                       <>
+                        <td className="border-b border-border">
+                          {acc.isActive && acc.phone ? (
+                            <input
+                              type="checkbox"
+                              checked={selected.has(acc.accountId)}
+                              onChange={() => toggle(acc.accountId)}
+                              className="h-4 w-4 accent-brand-navy"
+                            />
+                          ) : (
+                            <span className="text-xs text-muted">-</span>
+                          )}
+                        </td>
                         <td className="border-b border-border text-foreground">
                           {acc.role === "owner" ? "Ev Sahibi" : "Kiracı"} · {acc.fullName}
                         </td>
@@ -153,17 +171,15 @@ export function PeriodDetailClient({
                             <span className="text-muted">-</span>
                           )}
                         </td>
-                        <td className="border-b border-border pr-4">
-                          {acc.isActive && acc.phone ? (
-                            <input
-                              type="checkbox"
-                              checked={selected.has(acc.accountId)}
-                              onChange={() => toggle(acc.accountId)}
-                              className="accent-brand-navy"
-                            />
-                          ) : (
-                            <span className="text-xs text-muted">-</span>
-                          )}
+                      </>
+                    )}
+                    {i === 0 && (
+                      <>
+                        <td className="border-b border-border tabular-nums text-foreground" rowSpan={rows.length}>
+                          {formatTl(unit.aidatToplam)}
+                        </td>
+                        <td className="border-b border-border pr-4 tabular-nums text-foreground" rowSpan={rows.length}>
+                          {unit.demirbasToplam !== null ? formatTl(unit.demirbasToplam) : "-"}
                         </td>
                       </>
                     )}

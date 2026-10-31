@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.18"
   }
@@ -190,31 +192,34 @@ export type Database = {
       }
       otp_codes: {
         Row: {
-          account_id: string
+          account_id: string | null
           attempts: number
           code_hash: string
           consumed_at: string | null
           created_at: string
+          email: string | null
           expires_at: string
           id: string
           purpose: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           attempts?: number
           code_hash: string
           consumed_at?: string | null
           created_at?: string
+          email?: string | null
           expires_at: string
           id?: string
           purpose: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           attempts?: number
           code_hash?: string
           consumed_at?: string | null
           created_at?: string
+          email?: string | null
           expires_at?: string
           id?: string
           purpose?: string
@@ -312,7 +317,7 @@ export type Database = {
       }
       sms_log: {
         Row: {
-          account_id: string
+          account_id: string | null
           created_at: string
           id: string
           kind: string
@@ -323,7 +328,7 @@ export type Database = {
           status: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           created_at?: string
           id?: string
           kind: string
@@ -334,7 +339,7 @@ export type Database = {
           status: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           created_at?: string
           id?: string
           kind?: string
@@ -488,3 +493,43 @@ export type TablesUpdate<
       ? U
       : never
     : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
