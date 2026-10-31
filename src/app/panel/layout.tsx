@@ -22,7 +22,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       <header className="border-b border-border bg-card print:hidden">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
           <Logo size={34} />
-          <nav className="flex flex-wrap items-center gap-4">
+          <nav className="flex flex-wrap items-center gap-1">
             <Link href="/panel" className={navLinkClass}>
               Güncel Ay
             </Link>
