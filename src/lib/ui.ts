@@ -11,7 +11,7 @@ export const secondaryButtonClass =
 
 export const linkClass = "text-sm font-medium text-brand-navy hover:underline underline-offset-2";
 
-export const navLinkClass = "text-sm font-medium text-muted hover:text-brand-navy transition";
+export const navLinkClass = "text-sm font-bold text-muted hover:text-brand-navy transition";
 
 export const labelClass = "flex flex-col gap-1.5 text-sm font-medium text-foreground";
 
