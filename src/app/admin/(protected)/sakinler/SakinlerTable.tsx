@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { Fragment, useActionState, useEffect, useMemo, useState } from "react";
 import { badgeClass, inputClass } from "@/lib/ui";
 import { toggleAccountActiveAction, updateAccountAction, type UpdateAccountState } from "./actions";
 
@@ -38,8 +38,16 @@ function AccountCells({ acc }: { acc: AccountRow }) {
 
   if (editing) {
     const formId = `edit-form-${acc.id}`;
+    // key="edit" (ayrı dal, altındaki `key="view"` dalıyla farklı ağaç): React'in
+    // "Düzenle" <button type="button"> düğümünü "Kaydet" <button type="submit">
+    // ile aynı DOM node olarak yeniden kullanıp yerinde mutasyona uğratmasını
+    // engeller. Aksi halde, tıklama olayının tarayıcı tarafındaki varsayılan
+    // eylemi (click sonrası) hâlâ işlenirken React senkron biçimde aynı düğümü
+    // submit tipine çevirdiği için, TEK bir "Düzenle" tıklaması formu
+    // kendiliğinden gönderiyordu (gerçek kullanıcı tıklamalarında — programatik
+    // tetiklemelerde değil — yeniden üretildi ve doğrulandı).
     return (
-      <>
+      <Fragment key="edit">
         <td className="border-b border-border py-2">
           <form id={formId} action={formAction}>
             <input name="fullName" defaultValue={acc.full_name} required className={`w-full ${inputClass}`} />
@@ -79,12 +87,12 @@ function AccountCells({ acc }: { acc: AccountRow }) {
           </div>
           {state.error && <p className="mt-1 text-xs text-brand-red">{state.error}</p>}
         </td>
-      </>
+      </Fragment>
     );
   }
 
   return (
-    <>
+    <Fragment key="view">
       <td className="border-b border-border text-foreground">{acc.full_name}</td>
       <td className="border-b border-border text-muted">{acc.phone ?? "-"}</td>
       <td className="border-b border-border">
@@ -108,7 +116,7 @@ function AccountCells({ acc }: { acc: AccountRow }) {
           </form>
         </div>
       </td>
-    </>
+    </Fragment>
   );
 }
 
