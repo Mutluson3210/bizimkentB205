@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/service";
+import { toStorageSafeFilename } from "@/lib/files";
 
 export type CreateUploadUrlResult =
   | { ok: true; path: string; signedUrl: string; token: string }
@@ -19,7 +20,8 @@ export async function createDocumentUploadUrlAction(filename: string): Promise<C
   }
 
   const supabase = createServiceClient();
-  const { data, error } = await supabase.storage.from("belgeler").createSignedUploadUrl(filename, { upsert: true });
+  const safeFilename = toStorageSafeFilename(filename);
+  const { data, error } = await supabase.storage.from("belgeler").createSignedUploadUrl(safeFilename, { upsert: true });
   if (error) {
     return { ok: false, error: error.message };
   }

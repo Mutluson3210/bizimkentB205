@@ -1,5 +1,6 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
+import { toStorageSafeFilename } from "@/lib/files";
 
 /** blockCode+unitNo -> unit_id eşlemesi. Excel satırlarını daireye bağlamak için. */
 export async function buildUnitLookup(): Promise<Map<string, string>> {
@@ -183,7 +184,7 @@ export type SignedUpload = { path: string; signedUrl: string; token: string };
  */
 export async function createAnnouncementAttachmentUploadUrl(filename: string): Promise<SignedUpload> {
   const supabase = createServiceClient();
-  const path = `${crypto.randomUUID()}-${filename}`;
+  const path = `${crypto.randomUUID()}-${toStorageSafeFilename(filename)}`;
   const { data, error } = await supabase.storage.from("duyuru-ekleri").createSignedUploadUrl(path);
   if (error) throw error;
   return data;
