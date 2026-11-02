@@ -25,7 +25,7 @@ function normalize(s: string): string {
 
 const initialUpdateState: UpdateAccountState = {};
 
-function AccountCells({ acc }: { acc: AccountRow }) {
+function AccountCells({ acc, rowBg }: { acc: AccountRow; rowBg: string }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateAccountAction.bind(null, acc.id),
@@ -48,12 +48,12 @@ function AccountCells({ acc }: { acc: AccountRow }) {
     // tetiklemelerde değil — yeniden üretildi ve doğrulandı).
     return (
       <Fragment key="edit">
-        <td className="border-b border-border py-2">
+        <td className={`border-b border-border py-3 ${rowBg}`}>
           <form id={formId} action={formAction}>
             <input name="fullName" defaultValue={acc.full_name} required className={`w-full ${inputClass}`} />
           </form>
         </td>
-        <td className="border-b border-border py-2">
+        <td className={`border-b border-border py-3 ${rowBg}`}>
           <input
             name="phone"
             form={formId}
@@ -62,12 +62,12 @@ function AccountCells({ acc }: { acc: AccountRow }) {
             className={`w-full ${inputClass}`}
           />
         </td>
-        <td className="border-b border-border">
+        <td className={`border-b border-border py-3 ${rowBg}`}>
           <span className={badgeClass(acc.is_active ? "green" : "gray")}>
             {acc.is_active ? "Aktif" : "Pasif"}
           </span>
         </td>
-        <td className="border-b border-border pr-4">
+        <td className={`border-b border-border py-3 pr-4 ${rowBg}`}>
           <div className="flex items-center gap-3">
             <button
               type="submit"
@@ -93,14 +93,14 @@ function AccountCells({ acc }: { acc: AccountRow }) {
 
   return (
     <Fragment key="view">
-      <td className="border-b border-border text-foreground">{acc.full_name}</td>
-      <td className="border-b border-border text-muted">{acc.phone ?? "-"}</td>
-      <td className="border-b border-border">
+      <td className={`border-b border-border py-3 text-foreground ${rowBg}`}>{acc.full_name}</td>
+      <td className={`border-b border-border py-3 text-muted ${rowBg}`}>{acc.phone ?? "-"}</td>
+      <td className={`border-b border-border py-3 ${rowBg}`}>
         <span className={badgeClass(acc.is_active ? "green" : "gray")}>
           {acc.is_active ? "Aktif" : "Pasif"}
         </span>
       </td>
-      <td className="border-b border-border pr-4">
+      <td className={`border-b border-border py-3 pr-4 ${rowBg}`}>
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -165,13 +165,16 @@ export function SakinlerTable({ units }: { units: UnitRow[] }) {
                 </td>
               </tr>
             )}
-            {filtered.map((unit) => {
+            {filtered.map((unit, unitIndex) => {
               const accounts = (unit.accounts as AccountRow[]) ?? [];
+              const rowBg = unitIndex % 2 === 0 ? "bg-card" : "bg-background";
               if (accounts.length === 0) {
                 return (
                   <tr key={unit.id}>
-                    <td className="border-b border-border py-3 pl-4 font-medium text-foreground">{unit.daire_no}</td>
-                    <td colSpan={5} className="border-b border-border pr-4 text-muted">
+                    <td className={`border-b border-border py-3 pl-4 font-medium text-foreground ${rowBg}`}>
+                      {unit.daire_no}
+                    </td>
+                    <td colSpan={5} className={`border-b border-border py-3 pr-4 text-muted ${rowBg}`}>
                       Henüz hesap yok
                     </td>
                   </tr>
@@ -180,12 +183,17 @@ export function SakinlerTable({ units }: { units: UnitRow[] }) {
               return accounts.map((acc, i) => (
                 <tr key={acc.id}>
                   {i === 0 && (
-                    <td className="border-b border-border py-3 pl-4 font-medium text-foreground" rowSpan={accounts.length}>
+                    <td
+                      className={`border-b border-border py-3 pl-4 font-medium text-foreground ${rowBg}`}
+                      rowSpan={accounts.length}
+                    >
                       {unit.daire_no}
                     </td>
                   )}
-                  <td className="border-b border-border text-foreground">{acc.role === "owner" ? "Ev Sahibi" : "Kiracı"}</td>
-                  <AccountCells acc={acc} />
+                  <td className={`border-b border-border py-3 text-foreground ${rowBg}`}>
+                    {acc.role === "owner" ? "Ev Sahibi" : "Kiracı"}
+                  </td>
+                  <AccountCells acc={acc} rowBg={rowBg} />
                 </tr>
               ));
             })}
