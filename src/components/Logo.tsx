@@ -15,7 +15,7 @@ export function Logo({ size = 36, subtitle }: { size?: number; subtitle?: string
     <div className="flex items-center gap-3">
       <LogoMark size={size} />
       <div className="leading-tight">
-        <p className="font-semibold text-foreground">BİZİMKENT B205</p>
+        <p className="font-semibold text-foreground">BİZİMKENT B2 05 A/B - B1-11 - D11</p>
         {subtitle && <p className="text-xs text-muted">{subtitle}</p>}
       </div>
     </div>
@@ -35,7 +35,7 @@ export function SiteSeal({ size = 112, subtitle }: { size?: number; subtitle?: s
         style={{ width: size, height: size }}
       />
       <div className="text-center leading-tight">
-        <p className="font-semibold text-foreground">BİZİMKENT B205</p>
+        <p className="font-semibold text-foreground">BİZİMKENT B2 05 A/B - B1-11 - D11</p>
         {subtitle && <p className="text-xs text-muted">{subtitle}</p>}
       </div>
     </div>
