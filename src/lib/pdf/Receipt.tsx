@@ -2,14 +2,12 @@ import "server-only";
 import path from "node:path";
 import { Document, Page, Text, View, Font, StyleSheet } from "@react-pdf/renderer";
 import type { Tables } from "@/types/database";
+import { BANKA_HESAP_ADI, IBAN } from "@/lib/constants";
 
 Font.register({
   family: "NotoSans",
   src: path.join(process.cwd(), "src/assets/fonts/NotoSans.ttf"),
 });
-
-const BANKA_HESAP_ADI = "BİZİMKENT TOPLU KONUTLARI B-2 05-B1-11 D11 BLOK YÖNETİMİ";
-const IBAN = "TR70 0006 2000 7820 0006 2998 72";
 
 const styles = StyleSheet.create({
   page: { fontFamily: "NotoSans", padding: 36, fontSize: 11, color: "#16213e" },

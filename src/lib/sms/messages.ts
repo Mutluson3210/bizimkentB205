@@ -1,4 +1,5 @@
 import type { Tables } from "@/types/database";
+import { BANKA_HESAP_ADI, IBAN } from "@/lib/constants";
 
 type Role = "owner" | "tenant";
 
@@ -41,6 +42,7 @@ export function buildDebtMessage(opts: {
     parts.push(demirbas ? `Demirbas: ${formatTlSms(demirbas.toplam)}.` : "Demirbas verisi henüz girilmedi.");
   }
 
+  parts.push(`Odeme: ${BANKA_HESAP_ADI} IBAN: ${IBAN}.`);
   parts.push("Detay için siteye giriş yapabilirsiniz.");
   return toSmsSafe(parts.join(" "));
 }
