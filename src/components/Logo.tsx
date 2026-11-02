@@ -12,10 +12,11 @@ export function LogoMark({ size = 36 }: { size?: number }) {
 
 export function Logo({ size = 36, subtitle }: { size?: number; subtitle?: string }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex shrink-0 items-center gap-3">
       <LogoMark size={size} />
       <div className="leading-tight">
-        <p className="font-semibold text-foreground">BİZİMKENT B2 05 A/B - B1-11 - D11</p>
+        <p className="whitespace-nowrap font-semibold text-foreground">BİZİMKENT B205 A/B</p>
+        <p className="whitespace-nowrap font-semibold text-foreground">B1-11 - D11</p>
         {subtitle && <p className="text-xs text-muted">{subtitle}</p>}
       </div>
     </div>
