@@ -173,12 +173,20 @@ export async function getAllAnnouncements() {
   return data ?? [];
 }
 
-export async function uploadAnnouncementAttachment(file: File): Promise<string> {
+export type SignedUpload = { path: string; signedUrl: string; token: string };
+
+/**
+ * Dosya baytları server action üzerinden GEÇMEZ — Vercel'in serverless
+ * fonksiyonlarındaki ~4.5MB istek gövdesi sınırına (ve Next'in varsayılan
+ * 1MB server action sınırına) takılmasın diye, tarayıcı bu imzalı URL'ye
+ * dosyayı DOĞRUDAN Supabase Storage'a yükler.
+ */
+export async function createAnnouncementAttachmentUploadUrl(filename: string): Promise<SignedUpload> {
   const supabase = createServiceClient();
-  const path = `${crypto.randomUUID()}-${file.name}`;
-  const { error } = await supabase.storage.from("duyuru-ekleri").upload(path, file);
+  const path = `${crypto.randomUUID()}-${filename}`;
+  const { data, error } = await supabase.storage.from("duyuru-ekleri").createSignedUploadUrl(path);
   if (error) throw error;
-  return path;
+  return data;
 }
 
 export async function createAnnouncement(title: string, body: string, attachmentPath?: string | null) {

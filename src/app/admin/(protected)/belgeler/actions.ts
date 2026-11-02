@@ -3,27 +3,31 @@
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/service";
 
-export type UploadDocumentState = { error?: string };
+export type CreateUploadUrlResult =
+  | { ok: true; path: string; signedUrl: string; token: string }
+  | { ok: false; error: string };
 
-export async function uploadDocumentAction(
-  _prevState: UploadDocumentState,
-  formData: FormData,
-): Promise<UploadDocumentState> {
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: "Bir dosya seçin." };
+/**
+ * Dosya baytları bu server action'dan GEÇMEZ — sadece imzalı bir yükleme
+ * URL'si üretir; tarayıcı asıl dosyayı doğrudan Supabase Storage'a yükler.
+ * Böylece Vercel'in serverless fonksiyonlardaki ~4.5MB istek gövdesi sınırına
+ * takılmadan büyük PDF/dosyalar (örn. acil eylem planları) yüklenebilir.
+ */
+export async function createDocumentUploadUrlAction(filename: string): Promise<CreateUploadUrlResult> {
+  if (!filename.trim()) {
+    return { ok: false, error: "Geçersiz dosya adı." };
   }
 
   const supabase = createServiceClient();
-  const { error } = await supabase.storage.from("belgeler").upload(file.name, file, {
-    upsert: true,
-  });
+  const { data, error } = await supabase.storage.from("belgeler").createSignedUploadUrl(filename, { upsert: true });
   if (error) {
-    return { error: `Yükleme başarısız: ${error.message}` };
+    return { ok: false, error: error.message };
   }
+  return { ok: true, ...data };
+}
 
+export async function finishDocumentUploadAction() {
   revalidatePath("/admin/belgeler");
-  return {};
 }
 
 export async function deleteDocumentAction(name: string) {
