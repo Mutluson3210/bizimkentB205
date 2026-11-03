@@ -66,3 +66,20 @@ export function findHeaderRow(grid: SheetGrid, headerMustInclude: string): numbe
   }
   return -1;
 }
+
+/**
+ * `findHeaderRow`'un aksine, sayfanın TAMAMINI tarar ve eşleşen HER satırı
+ * döndürür — bir sayfada birden fazla blok, her biri kendi başlık satırıyla
+ * art arda tekrar edebiliyor (ör. tek sayfada 4 blok, her blok öncesi aynı
+ * "DAİRE NR." başlığı tekrarlanıyor).
+ */
+export function findHeaderRows(grid: SheetGrid, headerMustInclude: string): number[] {
+  const rows: number[] = [];
+  for (let r = 0; r < grid.length; r++) {
+    const row = grid[r] ?? [];
+    if (row.some((cell) => normalizeHeader(cell).includes(headerMustInclude))) {
+      rows.push(r);
+    }
+  }
+  return rows;
+}
