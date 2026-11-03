@@ -1,6 +1,6 @@
 import {
   collectDataRows,
-  findHeaderRow,
+  findHeaderRows,
   normalizeHeader,
   parseDaireNo,
   parseTRNumber,
@@ -49,10 +49,7 @@ function detectColumns(headerRow: unknown[]): ColumnMap | null {
   return cols;
 }
 
-function parseSheet(grid: SheetGrid): SicakSuRow[] {
-  const headerRowIdx = findHeaderRow(grid, "DAIRE");
-  if (headerRowIdx === -1) return [];
-
+function parseHeaderBlock(grid: SheetGrid, headerRowIdx: number): SicakSuRow[] {
   const cols = detectColumns(grid[headerRowIdx] ?? []);
   if (!cols) return [];
 
@@ -78,6 +75,17 @@ function parseSheet(grid: SheetGrid): SicakSuRow[] {
   }
 
   return rows;
+}
+
+/**
+ * Aidat/Demirbaş dosyasındaki gibi, bloklar (B2.05A, B2.05B, B1.11, D11)
+ * tek sayfada art arda, her biri kendi başlık satırını tekrarlayarak da
+ * gelebiliyor — bu yüzden sayfadaki HER başlık bloğu ayrı ayrı işlenip
+ * birleştirilir (bkz. parseAidatDemirbas.ts'teki aynı düzeltme).
+ */
+function parseSheet(grid: SheetGrid): SicakSuRow[] {
+  const headerRowIdxs = findHeaderRows(grid, "DAIRE");
+  return headerRowIdxs.flatMap((idx) => parseHeaderBlock(grid, idx));
 }
 
 export function parseSicakSuWorkbook(buffer: ArrayBuffer): SicakSuRow[] {
