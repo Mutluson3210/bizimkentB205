@@ -1,7 +1,9 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/service";
+import { deletePeriod } from "@/lib/data/admin";
 import { sendDebtSms, type SendDebtSmsSummary } from "@/lib/sms/sendDebtSms";
 
 export type SendState = {
@@ -56,4 +58,15 @@ export async function autoSendIfNeededAction(periodId: string): Promise<SendStat
   const result = await sendDebtSms(periodId, accountIds);
   revalidatePath(`/admin/donemler/${periodId}`);
   return { result };
+}
+
+/**
+ * Dönemi ve ona bağlı tüm aidat/demirbaş/sıcak su kayıtlarını siler
+ * (DB'de ON DELETE CASCADE ile). Yanlış yüklenen bir dönemi topluca
+ * geri almak için — sms_log geçmişi period_id null'lanarak korunur.
+ */
+export async function deletePeriodAction(periodId: string) {
+  await deletePeriod(periodId);
+  revalidatePath("/admin");
+  redirect("/admin");
 }

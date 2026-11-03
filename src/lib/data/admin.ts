@@ -66,6 +66,12 @@ export async function getUnitsWithAccounts() {
   });
 }
 
+export async function deletePeriod(periodId: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("periods").delete().eq("id", periodId);
+  if (error) throw error;
+}
+
 function startOfMonthIso(): string {
   const d = new Date();
   d.setDate(1);
