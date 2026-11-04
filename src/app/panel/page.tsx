@@ -4,7 +4,7 @@ import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, getUnitHasAct
 import { getAnnouncements } from "@/lib/data/announcements";
 import { AidatCard, DemirbasCard, GenelToplamCard, SicakSuCard } from "@/components/FigureCards";
 import { PrintButton } from "@/components/PrintButton";
-import { cardClass, linkClass, secondaryButtonClass } from "@/lib/ui";
+import { cardClass, linkClass } from "@/lib/ui";
 
 export default async function PanelPage() {
   const supabase = await createClient();
@@ -48,9 +48,6 @@ export default async function PanelPage() {
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-brand-navy">{periodLabel(latest)}</p>
             <div className="flex items-center gap-2 print:hidden">
-              <a href={`/panel/makbuz/${latest.id}`} className={secondaryButtonClass}>
-                Makbuz İndir (PDF)
-              </a>
               <PrintButton />
             </div>
           </div>

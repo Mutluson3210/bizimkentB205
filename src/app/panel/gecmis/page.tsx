@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, getUnitHasActiveTenant, periodLabel } from "@/lib/data/panel";
 import { AidatCard, DemirbasCard, GenelToplamCard, SicakSuCard } from "@/components/FigureCards";
 import { PrintButton } from "@/components/PrintButton";
-import { secondaryButtonClass } from "@/lib/ui";
 import { PeriodSelect } from "./PeriodSelect";
 
 export default async function GecmisPage({
@@ -39,9 +38,6 @@ export default async function GecmisPage({
         </div>
         <p className="hidden text-sm font-medium text-brand-navy print:block">{periodLabel(selected)}</p>
         <div className="flex items-center gap-2 print:hidden">
-          <a href={`/panel/makbuz/${selected.id}`} className={secondaryButtonClass}>
-            Makbuz İndir (PDF)
-          </a>
           <PrintButton />
         </div>
       </div>
