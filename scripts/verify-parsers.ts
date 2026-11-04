@@ -3,6 +3,7 @@
 import * as XLSX from "xlsx";
 import { parseSicakSuWorkbook } from "../src/lib/excel/parseSicakSu";
 import { parseRosterWorkbook } from "../src/lib/excel/parseRoster";
+import { parseAidatDemirbasWorkbook } from "../src/lib/excel/parseAidatDemirbas";
 
 function toBuffer(rows: unknown[][]): ArrayBuffer {
   const sheet = XLSX.utils.aoa_to_sheet(rows);
@@ -63,5 +64,41 @@ console.assert(ikiSatir[1].kullanilanM3 === 3, "Kullanılan m3 okunamadı");
 console.assert(ikiSatir[1].m3Fiyati === 161.6, "M3 fiyatı okunamadı");
 console.assert(ikiSatir[1].sicakSuPayiTl === 484.8, "Sıcak su payı okunamadı");
 console.assert(ikiSatir[0].aysonuSayac === 71, "Sayaç farkı 0 olan daire de okunmalı");
+
+// Gerçek Aidat/Demirbaş dosyası düzeni: aidat bölümünde "DEVİR AİDAT",
+// "DEVİR DEMİRBAŞ", "ÖNCEKİ AY TAHSİLATI" ve "ÖNCEKİ AYDAN DEVİR" sütunları
+// birlikte duruyor. Jenerik "DEVIR" eşleşmesi bunların hepsini aynı alana
+// yazmaya çalışıyordu; her birinin doğru alana gittiği doğrulanır.
+const aidatTamBaslik = toBuffer([
+  ["KASIM AYI AİDAT TABLOSU", null, null, null, null, null, null, null, null, null, null, "KASIM AYI DEMİRBAŞ TABLOSU"],
+  [
+    "DAİRE NR.", "DEVİR AİDAT", "DEVİR DEMİRBAŞ", "ÖNCEKİ AY TAHSİLATI", "ÖNCEKİ AYDAN DEVİR",
+    "GECİKME TAZMİNATI", "ISINMA DOĞALGAZ", "SICAK SU", "SABİT AİDAT", "TOPLAM",
+    null, "ÖNCEKİ AYDAN DEVİR", "GECİKME TAZMİNATI", null, null, "TOPLAM",
+  ],
+  ["B2.05A-04", 3648.92, 0, 2690.41, 958.51, 47.93, 1726, 646.4, 3045, 6423.84, null, 120, 6, null, null, 126],
+]);
+
+const [aidatTam] = parseAidatDemirbasWorkbook(aidatTamBaslik);
+console.log("\nAidat (tam başlık):", aidatTam);
+console.assert(aidatTam.aidat.devirBorc === 3648.92, "DEVİR AİDAT -> devirBorc okunmalı");
+console.assert(aidatTam.aidat.tahsilat === 2690.41, "ÖNCEKİ AY TAHSİLATI -> tahsilat okunmalı");
+console.assert(aidatTam.aidat.devir === 958.51, "ÖNCEKİ AYDAN DEVİR, DEVİR DEMİRBAŞ ile karışmamalı");
+console.assert(aidatTam.aidat.toplam === 6423.84, "Aidat toplamı hatalı");
+console.assert(aidatTam.demirbas?.devir === 120 && aidatTam.demirbas?.toplam === 126, "Demirbaş bölümü hatalı");
+
+// Eski dosya biçimi: "DEVİR AİDAT" ve "ÖNCEKİ AY TAHSİLATI" sütunları yok.
+// Devir yine okunmalı, yeni iki alan null kalmalı (panelde satır gösterilmez).
+const aidatEskiBaslik = toBuffer([
+  ["DAİRE NR.", "ÖNCEKİ AYDAN DEVİR", "GECİKME TAZMİNATI", "ISINMA DOĞALGAZ", "SICAK SU", "SABİT AİDAT", "TOPLAM"],
+  ["D11-5", 500, 25, 1726, 201, 2990, 5442],
+]);
+
+const [aidatEski] = parseAidatDemirbasWorkbook(aidatEskiBaslik);
+console.log("\nAidat (eski başlık):", aidatEski);
+console.assert(aidatEski.aidat.devir === 500, "Eski biçimde devir okunmalı");
+console.assert(aidatEski.aidat.devirBorc === null, "Sütun yoksa devirBorc null olmalı");
+console.assert(aidatEski.aidat.tahsilat === null, "Sütun yoksa tahsilat null olmalı");
+console.assert(aidatEski.demirbas === null, "Demirbaş sütunları yokken demirbas null olmalı");
 
 console.log("\nTüm assertion'lar geçti (hata görünmüyorsa).");

@@ -189,6 +189,8 @@ export async function uploadPeriodAction(
       resolvedAidat.map(({ unitId, row }) => ({
         period_id: periodId,
         unit_id: unitId!,
+        devir_aidat: row.aidat.devirBorc,
+        onceki_ay_tahsilati: row.aidat.tahsilat,
         onceki_aydan_devir: row.aidat.devir,
         gecikme_tazminati: row.aidat.gecikme,
         isinma_dogalgaz: row.aidat.isinma,

@@ -13,6 +13,10 @@ export type AidatDemirbasRow = {
   unitNo: number;
   daireNoRaw: string;
   aidat: {
+    /** Excel "DEVİR AİDAT" — önceki ay borcu. Sütun yoksa null. */
+    devirBorc: number | null;
+    /** Excel "ÖNCEKİ AY TAHSİLATI" — o borç için yapılan ödeme. Sütun yoksa null. */
+    tahsilat: number | null;
     devir: number;
     gecikme: number;
     isinma: number;
@@ -29,6 +33,8 @@ export type AidatDemirbasRow = {
 
 type ColumnMap = {
   daire: number;
+  aidatDevirBorc?: number;
+  aidatTahsilat?: number;
   aidatDevir?: number;
   aidatGecikme?: number;
   aidatIsinma?: number;
@@ -50,20 +56,28 @@ function detectColumns(headerRow: unknown[]): ColumnMap | null {
     if (!h) return;
 
     if (section === "aidat") {
+      // "DEVİR AİDAT" ve "DEVİR DEMİRBAŞ", jenerik "DEVIR" kontrolünden ÖNCE
+      // ayrıştırılır; aksi halde ikisi de "Önceki Aydan Devir" sanılır.
       if (h.includes("DAIRE")) {
-        daire = i;
+        daire ??= i;
+      } else if (h.includes("DEVIR AIDAT") || h.includes("AIDAT DEVIR")) {
+        cols.aidatDevirBorc ??= i;
+      } else if (h.includes("DEVIR DEMIRBAS") || h.includes("DEMIRBAS DEVIR")) {
+        // Demirbaş tablosunun kendi devri — aidat kalemi değil, yoksayılır.
+      } else if (h.includes("TAHSILAT")) {
+        cols.aidatTahsilat ??= i;
       } else if (h.includes("DEVIR")) {
-        cols.aidatDevir = i;
+        cols.aidatDevir ??= i;
       } else if (h.includes("GECIKME")) {
-        cols.aidatGecikme = i;
+        cols.aidatGecikme ??= i;
       } else if (h.includes("ISINMA") || h.includes("DOGALGAZ")) {
-        cols.aidatIsinma = i;
+        cols.aidatIsinma ??= i;
       } else if (h.includes("SICAK SU")) {
-        cols.aidatSicakSu = i;
+        cols.aidatSicakSu ??= i;
       } else if (h.includes("SABIT")) {
-        cols.aidatSabit = i;
+        cols.aidatSabit ??= i;
       } else if (h.includes("TOPLAM")) {
-        cols.aidatToplam = i;
+        cols.aidatToplam ??= i;
         section = "demirbas";
       }
     } else {
@@ -105,6 +119,10 @@ function parseHeaderBlock(grid: SheetGrid, headerRowIdx: number): AidatDemirbasR
       unitNo: parsed.unitNo,
       daireNoRaw,
       aidat: {
+        devirBorc:
+          cols.aidatDevirBorc !== undefined ? parseTRNumber(row[cols.aidatDevirBorc]) : null,
+        tahsilat:
+          cols.aidatTahsilat !== undefined ? parseTRNumber(row[cols.aidatTahsilat]) : null,
         devir: parseTRNumber(cols.aidatDevir !== undefined ? row[cols.aidatDevir] : 0),
         gecikme: parseTRNumber(cols.aidatGecikme !== undefined ? row[cols.aidatGecikme] : 0),
         isinma: parseTRNumber(cols.aidatIsinma !== undefined ? row[cols.aidatIsinma] : 0),

@@ -32,6 +32,15 @@ export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
         <EmptyNote />
       ) : (
         <>
+          {aidat.devir_aidat !== null && (
+            <Row label="Önceki Ay Borcu" value={aidat.devir_aidat} />
+          )}
+          {aidat.onceki_ay_tahsilati !== null && (
+            <Row
+              label="Önceki Ay Borcu İçin Yaptığınız Ödeme"
+              value={aidat.onceki_ay_tahsilati}
+            />
+          )}
           <Row label="Önceki Aydan Devir" value={aidat.onceki_aydan_devir} />
           <Row label="Gecikme Tazminatı" value={aidat.gecikme_tazminati} />
           <Row label="Isınma / Doğalgaz" value={aidat.isinma_dogalgaz} />

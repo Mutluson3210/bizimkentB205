@@ -60,9 +60,11 @@ export type Database = {
       }
       aidat_kayit: {
         Row: {
+          devir_aidat: number | null
           gecikme_tazminati: number
           id: string
           isinma_dogalgaz: number
+          onceki_ay_tahsilati: number | null
           onceki_aydan_devir: number
           period_id: string
           sabit_aidat: number
@@ -71,9 +73,11 @@ export type Database = {
           unit_id: string
         }
         Insert: {
+          devir_aidat?: number | null
           gecikme_tazminati?: number
           id?: string
           isinma_dogalgaz?: number
+          onceki_ay_tahsilati?: number | null
           onceki_aydan_devir?: number
           period_id: string
           sabit_aidat?: number
@@ -82,9 +86,11 @@ export type Database = {
           unit_id: string
         }
         Update: {
+          devir_aidat?: number | null
           gecikme_tazminati?: number
           id?: string
           isinma_dogalgaz?: number
+          onceki_ay_tahsilati?: number | null
           onceki_aydan_devir?: number
           period_id?: string
           sabit_aidat?: number
