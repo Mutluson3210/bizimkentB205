@@ -25,22 +25,9 @@ function TotalRow({ value }: { value: number | null | undefined }) {
 
 type Badge = { tone: "navy" | "green" | "red" | "gray"; text: string };
 
-/** Önceki aydan devreden bakiyeye göre ek bir uyarı/bilgi rozeti üretir:
- * pozitifse ödenmemiş borç devretmiş, negatifse fazla ödeme var (alacaklı). */
-function devirBadge(devir: number | null | undefined): Badge | null {
-  if (devir == null || devir === 0) return null;
-  return devir > 0
-    ? { tone: "red", text: "Gecikmiş Borç Var" }
-    : { tone: "green", text: "Alacaklısınız" };
-}
-
 export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
-  const badges: Badge[] = [{ tone: "navy", text: "Kiracı ve ev sahibi görür" }];
-  const devir = devirBadge(aidat?.onceki_aydan_devir);
-  if (devir) badges.push(devir);
-
   return (
-    <Card title="Aidat" badges={badges}>
+    <Card title="Aidat" badges={[{ tone: "navy", text: "Kiracı ve ev sahibi görür" }]}>
       {!aidat ? (
         <EmptyNote />
       ) : (
@@ -58,12 +45,8 @@ export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
 }
 
 export function DemirbasCard({ demirbas }: { demirbas: PeriodFigures["demirbas"] }) {
-  const badges: Badge[] = [{ tone: "green", text: "Ev sahibine aittir" }];
-  const devir = devirBadge(demirbas?.onceki_aydan_devir);
-  if (devir) badges.push(devir);
-
   return (
-    <Card title="Demirbaş" badges={badges}>
+    <Card title="Demirbaş" badges={[{ tone: "green", text: "Ev sahibine aittir" }]}>
       {!demirbas ? (
         <EmptyNote />
       ) : (
