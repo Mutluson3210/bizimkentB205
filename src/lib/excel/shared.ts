@@ -83,3 +83,33 @@ export function findHeaderRows(grid: SheetGrid, headerMustInclude: string): numb
   }
   return rows;
 }
+
+/**
+ * Başlıklar tek satıra sığmayıp ÜST satıra taşabiliyor: Sıcak Su dosyasında
+ * üst satırda "AYBAŞI / AYSONU / KULLANILAN / M3", alt satırda "SAYAÇ / SAYAÇ /
+ * M3 / FİYATI" yazıyor ve "DAİRE NR." yalnızca alt satırda. Tek satıra bakan
+ * sütun tanıma bu durumda yarısını kaçırır; bu yüzden başlık satırının
+ * üstündeki en fazla `lookUp` satır, sütun sütun birleştirilip tek bir etiket
+ * listesi üretilir ("AYBAŞI" + "SAYAÇ" -> "AYBASI SAYAC").
+ *
+ * Üstteki satır bir veri satırıysa (önceki bloğun son satırı) birleştirme orada
+ * durur — tek sayfada art arda gelen bloklar arasında sızıntı olmaz.
+ */
+export function stackedHeaderLabels(grid: SheetGrid, headerRowIdx: number, lookUp = 2): string[] {
+  const rowIdxs: number[] = [];
+  for (let r = headerRowIdx - 1; r >= 0 && headerRowIdx - r <= lookUp; r--) {
+    if ((grid[r] ?? []).some((cell) => parseDaireNo(cell))) break;
+    rowIdxs.unshift(r);
+  }
+  rowIdxs.push(headerRowIdx);
+
+  const width = Math.max(0, ...rowIdxs.map((r) => (grid[r] ?? []).length));
+  const labels: string[] = [];
+  for (let c = 0; c < width; c++) {
+    labels[c] = rowIdxs
+      .map((r) => normalizeHeader(grid[r]?.[c]))
+      .filter(Boolean)
+      .join(" ");
+  }
+  return labels;
+}

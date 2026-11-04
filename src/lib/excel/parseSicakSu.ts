@@ -5,6 +5,7 @@ import {
   parseDaireNo,
   parseTRNumber,
   readWorkbookSheets,
+  stackedHeaderLabels,
   type SheetGrid,
 } from "./shared";
 
@@ -28,20 +29,21 @@ type ColumnMap = {
   payi?: number;
 };
 
-function detectColumns(headerRow: unknown[]): ColumnMap | null {
+const VALUE_KEYS = ["aybasi", "aysonu", "kullanilanM3", "m3Fiyati", "payi"] as const;
+
+function detectColumns(labels: string[]): ColumnMap | null {
   let daire: number | undefined;
   const cols: ColumnMap = { daire: -1 };
 
-  headerRow.forEach((cell, i) => {
-    const h = normalizeHeader(cell);
+  labels.forEach((h, i) => {
     if (!h) return;
 
-    if (h.includes("DAIRE")) daire = i;
-    else if (h.includes("AYBASI")) cols.aybasi = i;
-    else if (h.includes("AYSONU")) cols.aysonu = i;
-    else if (h.includes("KULLANILAN")) cols.kullanilanM3 = i;
-    else if (h.includes("FIYAT")) cols.m3Fiyati = i;
-    else if (h.includes("PAYI")) cols.payi = i;
+    if (h.includes("DAIRE")) daire ??= i;
+    else if (h.includes("AYBASI")) cols.aybasi ??= i;
+    else if (h.includes("AYSONU")) cols.aysonu ??= i;
+    else if (h.includes("KULLANILAN")) cols.kullanilanM3 ??= i;
+    else if (h.includes("FIYAT")) cols.m3Fiyati ??= i;
+    else if (h.includes("PAYI")) cols.payi ??= i;
   });
 
   if (daire === undefined) return null;
@@ -49,9 +51,39 @@ function detectColumns(headerRow: unknown[]): ColumnMap | null {
   return cols;
 }
 
+/** Başlık satırının kendisinden okunamayan sütunları, üst satırlarla
+ * birleştirilmiş etiketlerden tamamlar (bkz. `stackedHeaderLabels`). Kendi
+ * satırından okunan sütunlar her zaman öncelikli; aynı sütun iki alana
+ * atanmaz. */
+function fillMissingColumns(cols: ColumnMap, fallback: ColumnMap | null): ColumnMap {
+  if (!fallback) return cols;
+
+  const taken = new Set<number>([cols.daire]);
+  for (const key of VALUE_KEYS) {
+    const own = cols[key];
+    if (own !== undefined) taken.add(own);
+  }
+
+  for (const key of VALUE_KEYS) {
+    const candidate = fallback[key];
+    if (cols[key] === undefined && candidate !== undefined && !taken.has(candidate)) {
+      cols[key] = candidate;
+      taken.add(candidate);
+    }
+  }
+
+  return cols;
+}
+
 function parseHeaderBlock(grid: SheetGrid, headerRowIdx: number): SicakSuRow[] {
-  const cols = detectColumns(grid[headerRowIdx] ?? []);
-  if (!cols) return [];
+  const own = detectColumns((grid[headerRowIdx] ?? []).map(normalizeHeader));
+  if (!own) return [];
+
+  // Tek satırlık başlıkta hepsi zaten bulunur ve bu adım atlanır; iki satıra
+  // bölünmüş başlıkta (AYBAŞI/AYSONU/KULLANILAN üstte) eksikler tamamlanır.
+  const cols = VALUE_KEYS.every((k) => own[k] !== undefined)
+    ? own
+    : fillMissingColumns(own, detectColumns(stackedHeaderLabels(grid, headerRowIdx)));
 
   const dataRowIdxs = collectDataRows(grid, headerRowIdx + 1, cols.daire);
 

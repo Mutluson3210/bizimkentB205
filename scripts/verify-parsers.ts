@@ -39,4 +39,29 @@ console.assert(roster.rows.length === 2, "Tanınmayan rol satırı hariç 2 sat�
 console.assert(roster.rows[0].role === "owner" && roster.rows[1].role === "tenant", "Rol eşleme hatalı");
 console.assert(roster.warnings.some((w) => w.includes("???")), "Tanınmayan rol yakalanmalı");
 
+// Başlığın iki satıra bölündüğü gerçek Sıcak Su dosyası düzeni: "DAİRE NR."
+// alt satırda, "AYBAŞI/AYSONU/KULLANILAN/M3" üst satırda. Tek satıra bakan
+// eski sütun tanıma sayaç ve m3 sütunlarını kaçırıyordu (Kasım 2026 yüklemesi).
+const sicakSuIkiSatirBaslik = toBuffer([
+  ["kasım  AYI  SICAK SU", null, null, null, null, null],
+  ["KULLANIMLARI / MALİYETLERİ / DAİRELERE İSABET EDEN PAYLAR", null, null, null, null, null],
+  [null, "AYBAŞI", "AYSONU", "KULLANILAN", "M3", "SICAK "],
+  ["DAİRE NR.", "SAYAÇ", "SAYAÇ", "M3", "FİYATI", "SU PAYI TL"],
+  ["B2.05A-01", 71, 71, 0, 161.6, 0],
+  ["B2.05B-35", 95, 98, 3, 161.6, 484.8],
+  [null, null, null, null, null, null],
+  ["TOPLAM", null, null, 180, 161.6, 29088],
+]);
+
+const ikiSatir = parseSicakSuWorkbook(sicakSuIkiSatirBaslik);
+console.log("\nİki satırlı başlık:", ikiSatir);
+console.assert(ikiSatir.length === 2, "İki satırlı başlıkta 2 daire okunmalı (TOPLAM satırı hariç)");
+console.assert(ikiSatir[1].daireNoRaw === "B2.05B-35", "Daire sırası/okuması hatalı");
+console.assert(ikiSatir[1].aybasiSayac === 95, "Aybaşı sayaç okunamadı");
+console.assert(ikiSatir[1].aysonuSayac === 98, "Aysonu sayaç okunamadı");
+console.assert(ikiSatir[1].kullanilanM3 === 3, "Kullanılan m3 okunamadı");
+console.assert(ikiSatir[1].m3Fiyati === 161.6, "M3 fiyatı okunamadı");
+console.assert(ikiSatir[1].sicakSuPayiTl === 484.8, "Sıcak su payı okunamadı");
+console.assert(ikiSatir[0].aysonuSayac === 71, "Sayaç farkı 0 olan daire de okunmalı");
+
 console.log("\nTüm assertion'lar geçti (hata görünmüyorsa).");
