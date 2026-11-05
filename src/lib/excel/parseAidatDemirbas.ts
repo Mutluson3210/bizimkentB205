@@ -56,16 +56,24 @@ function detectColumns(headerRow: unknown[]): ColumnMap | null {
     if (!h) return;
 
     if (section === "aidat") {
-      // "DEVİR AİDAT" ve "DEVİR DEMİRBAŞ", jenerik "DEVIR" kontrolünden ÖNCE
-      // ayrıştırılır; aksi halde ikisi de "Önceki Aydan Devir" sanılır.
+      // Sütun adları aylar arasında elle değişiyor; aynı kalem iki farklı
+      // yazımla gelebiliyor ve yazım hatası da olabiliyor:
+      //   önceki ay borcu : "DEVİR AİDAT"          -> "ÖNCEKİ AY AİDAT BORCU"
+      //   yapılan ödeme   : "ÖNCEKİ AY TAHSİLATI"  -> "ÖNCEKİ AY BORCUNDAN TAHSLİAT"
+      // Bu yüzden eşleşmeler gevşek. SIRA ÖNEMLİ:
+      //   1) "TAHS" önce — "...BORCUNDAN TAHSLİAT" hem BORC hem TAHS içeriyor,
+      //      ödeme sütunu borç sütunu sanılmamalı ("TAHSİLAT"/"TAHSLİAT" ikisi de).
+      //   2) borç/DEVİR AİDAT sonra — "DEVİR AİDAT" jenerik DEVIR'e düşmemeli.
+      //   3) "DEVİR DEMİRBAŞ" yoksayılır, en sonda jenerik DEVIR =
+      //      "ÖNCEKİ AYDAN DEVİR".
       if (h.includes("DAIRE")) {
         daire ??= i;
-      } else if (h.includes("DEVIR AIDAT") || h.includes("AIDAT DEVIR")) {
+      } else if (h.includes("TAHS")) {
+        cols.aidatTahsilat ??= i;
+      } else if (h.includes("BORC") || h.includes("DEVIR AIDAT") || h.includes("AIDAT DEVIR")) {
         cols.aidatDevirBorc ??= i;
       } else if (h.includes("DEVIR DEMIRBAS") || h.includes("DEMIRBAS DEVIR")) {
         // Demirbaş tablosunun kendi devri — aidat kalemi değil, yoksayılır.
-      } else if (h.includes("TAHSILAT")) {
-        cols.aidatTahsilat ??= i;
       } else if (h.includes("DEVIR")) {
         cols.aidatDevir ??= i;
       } else if (h.includes("GECIKME")) {
