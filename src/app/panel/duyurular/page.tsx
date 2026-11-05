@@ -31,8 +31,14 @@ export default async function PanelDuyurularPage() {
               {a.attachmentUrl && a.attachment_path && (
                 <div className="mt-3">
                   {isImageFile(a.attachment_path) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.attachmentUrl} alt={a.title} className="max-h-64 rounded-lg border border-border" />
+                    <a href={a.attachmentUrl} target="_blank" rel="noopener noreferrer" className="block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={a.attachmentUrl}
+                        alt={a.title}
+                        className="max-h-80 w-full rounded-lg border border-border object-contain"
+                      />
+                    </a>
                   ) : (
                     <a href={a.attachmentUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
                       📎 {stripUuidPrefix(a.attachment_path)}
