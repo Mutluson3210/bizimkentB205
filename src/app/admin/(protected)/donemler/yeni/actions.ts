@@ -207,8 +207,11 @@ export async function uploadPeriodAction(
         demirbasRows.map(({ unitId, row }) => ({
           period_id: periodId,
           unit_id: unitId!,
+          devir_demirbas: row.demirbas!.devirBorc,
+          onceki_ay_tahsilati: row.demirbas!.tahsilat,
           onceki_aydan_devir: row.demirbas!.devir,
           gecikme_tazminati: row.demirbas!.gecikme,
+          yeni_kalemler: row.demirbas!.yeniKalemler,
           toplam: row.demirbas!.toplam,
         })),
       );

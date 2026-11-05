@@ -159,28 +159,37 @@ export type Database = {
       }
       demirbas_kayit: {
         Row: {
+          devir_demirbas: number | null
           gecikme_tazminati: number
           id: string
+          onceki_ay_tahsilati: number | null
           onceki_aydan_devir: number
           period_id: string
           toplam: number
           unit_id: string
+          yeni_kalemler: Json | null
         }
         Insert: {
+          devir_demirbas?: number | null
           gecikme_tazminati?: number
           id?: string
+          onceki_ay_tahsilati?: number | null
           onceki_aydan_devir?: number
           period_id: string
           toplam?: number
           unit_id: string
+          yeni_kalemler?: Json | null
         }
         Update: {
+          devir_demirbas?: number | null
           gecikme_tazminati?: number
           id?: string
+          onceki_ay_tahsilati?: number | null
           onceki_aydan_devir?: number
           period_id?: string
           toplam?: number
           unit_id?: string
+          yeni_kalemler?: Json | null
         }
         Relationships: [
           {

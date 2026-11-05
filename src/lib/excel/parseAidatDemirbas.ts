@@ -25,8 +25,15 @@ export type AidatDemirbasRow = {
     toplam: number;
   };
   demirbas: {
+    /** Excel "ÖNCEKİ AY DEMİRBAŞ BORCU". Sütun yoksa null. */
+    devirBorc: number | null;
+    /** Excel "ÖNCEKİ AY BORCUNDAN TAHSLİAT" (demirbaş bölümü). Sütun yoksa null. */
+    tahsilat: number | null;
     devir: number;
     gecikme: number;
+    /** Gecikme ile Toplam arasındaki, başlığı kalemin ne olduğunu anlatan
+     * sütunlar. O ay yeni kalem yoksa boş dizi. */
+    yeniKalemler: { aciklama: string; tutar: number }[];
     toplam: number;
   } | null;
 };
@@ -41,15 +48,20 @@ type ColumnMap = {
   aidatSicakSu?: number;
   aidatSabit?: number;
   aidatToplam?: number;
+  demirbasDevirBorc?: number;
+  demirbasTahsilat?: number;
   demirbasDevir?: number;
   demirbasGecikme?: number;
   demirbasToplam?: number;
+  /** Demirbaş bölümünde bilinen kalemlerden hiçbirine uymayan, başlığı olan
+   * sütunlar — yeni demirbaş kalemi adayları. */
+  demirbasYeni: { index: number; aciklama: string }[];
 };
 
 function detectColumns(headerRow: unknown[]): ColumnMap | null {
   let daire: number | undefined;
   let section: "aidat" | "demirbas" = "aidat";
-  const cols: ColumnMap = { daire: -1 };
+  const cols: ColumnMap = { daire: -1, demirbasYeni: [] };
 
   headerRow.forEach((cell, i) => {
     const h = normalizeHeader(cell);
@@ -89,12 +101,23 @@ function detectColumns(headerRow: unknown[]): ColumnMap | null {
         section = "demirbas";
       }
     } else {
-      if (cols.demirbasDevir === undefined && h.includes("DEVIR")) {
+      // Aidat bölümüyle aynı sıra gerekçesi: "...BORCUNDAN TAHSLİAT" hem BORC
+      // hem TAHS içerdiği için TAHS önce denenir.
+      if (h.includes("TAHS")) {
+        cols.demirbasTahsilat ??= i;
+      } else if (h.includes("BORC")) {
+        cols.demirbasDevirBorc ??= i;
+      } else if (cols.demirbasDevir === undefined && h.includes("DEVIR")) {
         cols.demirbasDevir = i;
       } else if (cols.demirbasGecikme === undefined && h.includes("GECIKME")) {
         cols.demirbasGecikme = i;
       } else if (cols.demirbasToplam === undefined && h.includes("TOPLAM")) {
         cols.demirbasToplam = i;
+      } else {
+        // Bilinen hiçbir kaleme uymayan, başlıklı sütun: yeni demirbaş kalemi
+        // olabilir. Başlığın ÖZGÜN hâli saklanır — panelde parantez içinde
+        // olduğu gibi gösterilecek ("ÇATI YENİLEME" gibi).
+        cols.demirbasYeni.push({ index: i, aciklama: String(cell ?? "").trim() });
       }
     }
   });
@@ -109,6 +132,13 @@ function parseHeaderBlock(grid: SheetGrid, headerRowIdx: number): AidatDemirbasR
   if (!cols) return [];
 
   const dataRowIdxs = collectDataRows(grid, headerRowIdx + 1, cols.daire);
+
+  // Başlıklı ama tanınmayan sütunlardan yalnızca EN AZ BİR dairede sayısal
+  // değer taşıyanlar gerçek kalem sayılır; böylece başlık satırındaki serseri
+  // notlar ("son ödeme tarihi" gibi) kalem olarak görünmez.
+  const yeniKalemKolonlari = cols.demirbasYeni.filter(({ index }) =>
+    dataRowIdxs.some((r) => typeof grid[r]?.[index] === "number"),
+  );
 
   const rows: AidatDemirbasRow[] = [];
   for (const r of dataRowIdxs) {
@@ -140,8 +170,20 @@ function parseHeaderBlock(grid: SheetGrid, headerRowIdx: number): AidatDemirbasR
       },
       demirbas: hasDemirbas
         ? {
+            devirBorc:
+              cols.demirbasDevirBorc !== undefined
+                ? parseTRNumber(row[cols.demirbasDevirBorc])
+                : null,
+            tahsilat:
+              cols.demirbasTahsilat !== undefined
+                ? parseTRNumber(row[cols.demirbasTahsilat])
+                : null,
             devir: parseTRNumber(row[cols.demirbasDevir!]),
             gecikme: parseTRNumber(row[cols.demirbasGecikme!]),
+            yeniKalemler: yeniKalemKolonlari.map(({ index, aciklama }) => ({
+              aciklama,
+              tutar: parseTRNumber(row[index]),
+            })),
             toplam: parseTRNumber(row[cols.demirbasToplam!]),
           }
         : null,

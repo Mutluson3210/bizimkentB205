@@ -25,6 +25,21 @@ function TotalRow({ value }: { value: number | null | undefined }) {
 
 type Badge = { tone: "navy" | "green" | "red" | "gray"; text: string };
 
+type YeniKalem = { aciklama: string; tutar: number };
+
+/** `yeni_kalemler` jsonb olduğu için tipi `Json`; beklenen biçime uymayan
+ * veriyi sessizce eler. null dönerse (dönem bu özellikten önce yüklendi)
+ * satır hiç gösterilmez; boş dizi "o ay yeni kalem yok" demek. */
+function parseYeniKalemler(value: unknown): YeniKalem[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const { aciklama, tutar } = item as { aciklama?: unknown; tutar?: unknown };
+    if (typeof tutar !== "number") return [];
+    return [{ aciklama: typeof aciklama === "string" ? aciklama : "", tutar }];
+  });
+}
+
 export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
   return (
     <Card title="Aidat" badges={[{ tone: "navy", text: "Kiracı ve ev sahibi görür" }]}>
@@ -33,11 +48,11 @@ export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
       ) : (
         <>
           {aidat.devir_aidat !== null && (
-            <Row label="Önceki Ay Borcu" value={aidat.devir_aidat} />
+            <Row label="Önceki Ay Aidat Borcu" value={aidat.devir_aidat} />
           )}
           {aidat.onceki_ay_tahsilati !== null && (
             <Row
-              label="Önceki Ay Borcu İçin Yaptığınız Ödeme"
+              label="Önceki Ay Aidat Borcu İçin Yaptığınız Ödeme"
               value={aidat.onceki_ay_tahsilati}
             />
           )}
@@ -54,14 +69,43 @@ export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
 }
 
 export function DemirbasCard({ demirbas }: { demirbas: PeriodFigures["demirbas"] }) {
+  const yeniKalemler = parseYeniKalemler(demirbas?.yeni_kalemler);
+
   return (
     <Card title="Demirbaş" badges={[{ tone: "green", text: "Ev sahibine aittir" }]}>
       {!demirbas ? (
         <EmptyNote />
       ) : (
         <>
+          {demirbas.devir_demirbas !== null && (
+            <Row label="Önceki Ay Demirbaş Borcu" value={demirbas.devir_demirbas} />
+          )}
+          {demirbas.onceki_ay_tahsilati !== null && (
+            <Row
+              label="Önceki Ay Demirbaş Borcu İçin Yaptığınız Ödeme"
+              value={demirbas.onceki_ay_tahsilati}
+            />
+          )}
           <Row label="Önceki Aydan Devir" value={demirbas.onceki_aydan_devir} />
           <Row label="Gecikme Tazminatı" value={demirbas.gecikme_tazminati} />
+          {/* Excel'de kalem sütunu açıldığında başlığı parantez içinde yazılır;
+              sütun hiç yoksa (boş dizi) tek bir sıfır satırı gösterilir. */}
+          {yeniKalemler !== null &&
+            (yeniKalemler.length > 0 ? (
+              yeniKalemler.map((kalem, i) => (
+                <Row
+                  key={`${kalem.aciklama}-${i}`}
+                  label={
+                    kalem.aciklama
+                      ? `Yeni Demirbaş Kalemi (${kalem.aciklama})`
+                      : "Yeni Demirbaş Kalemi"
+                  }
+                  value={kalem.tutar}
+                />
+              ))
+            ) : (
+              <Row label="Yeni Demirbaş Kalemi" value={0} />
+            ))}
           <TotalRow value={demirbas.toplam} />
         </>
       )}

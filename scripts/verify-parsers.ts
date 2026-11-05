@@ -127,4 +127,37 @@ console.assert(
   "Demirbaş bölümü, kendi borç/tahsilat sütunlarından etkilenmemeli",
 );
 
+// Demirbaş bölümü: borç/tahsilat sütunları ve "yeni demirbaş kalemi".
+// Excel'de GECİKME ile TOPLAM arasında bu iş için ayrılmış boş sütunlar var;
+// biri başlıklanıp tutar girildiğinde kalem olarak okunmalı, diğeri (başlığı
+// olmayan) yoksayılmalı.
+const demirbasYeniKalem = toBuffer([
+  [
+    "DAİRE NR.", "ÖNCEKİ AY AİDAT BORCU", "ÖNCEKİ AY BORCUNDAN TAHSLİAT", "ÖNCEKİ AYDAN DEVİR",
+    "GECİKME TAZMİNATI", "ISINMA DOĞALGAZ", "SICAK SU", "SABİT AİDAT", "TOPLAM",
+    null, "ÖNCEKİ AY DEMİRBAŞ BORCU", "ÖNCEKİ AY BORCUNDAN TAHSLİAT", "ÖNCEKİ AYDAN DEVİR",
+    "GECİKME TAZMİNATI", "ÇATI YENİLEME", null, "TOPLAM",
+  ],
+  ["B2.05A-04", 3648.92, 2690.41, 958.51, 47.93, 1726, 646.4, 3045, 6423.84, null, 300, 180, 120, 6, 1500, null, 1626],
+]);
+
+const [dYeni] = parseAidatDemirbasWorkbook(demirbasYeniKalem);
+console.log("\nDemirbaş (yeni kalem):", dYeni.demirbas);
+console.assert(dYeni.demirbas?.devirBorc === 300, "ÖNCEKİ AY DEMİRBAŞ BORCU okunmalı");
+console.assert(dYeni.demirbas?.tahsilat === 180, "Demirbaş tahsilatı okunmalı");
+console.assert(dYeni.demirbas?.devir === 120, "Demirbaş devri borç/tahsilat ile karışmamalı");
+console.assert(dYeni.demirbas?.gecikme === 6, "Demirbaş gecikmesi hatalı");
+console.assert(dYeni.demirbas?.toplam === 1626, "Demirbaş toplamı hatalı");
+console.assert(dYeni.demirbas?.yeniKalemler.length === 1, "Başlıksız sütun kalem sayılmamalı");
+console.assert(
+  dYeni.demirbas?.yeniKalemler[0].aciklama === "ÇATI YENİLEME" &&
+    dYeni.demirbas?.yeniKalemler[0].tutar === 1500,
+  "Yeni kalem açıklaması özgün hâliyle ve tutarıyla okunmalı",
+);
+console.assert(dYeni.aidat.devirBorc === 3648.92 && dYeni.aidat.tahsilat === 2690.41, "Aidat bölümü etkilenmemeli");
+
+// Yeni kalem sütunu hiç yokken boş dizi dönmeli ("o ay kalem yok"), null değil.
+const [dKalemsiz] = parseAidatDemirbasWorkbook(aidatYeniAdlar);
+console.assert(dKalemsiz.demirbas?.yeniKalemler.length === 0, "Kalem sütunu yoksa boş dizi olmalı");
+
 console.log("\nTüm assertion'lar geçti (hata görünmüyorsa).");
