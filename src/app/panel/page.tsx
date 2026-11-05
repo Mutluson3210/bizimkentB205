@@ -4,6 +4,7 @@ import { getCurrentAccount, getPublishedPeriods, getPeriodFigures, getUnitHasAct
 import { getAnnouncements } from "@/lib/data/announcements";
 import { AidatCard, DemirbasCard, GenelToplamCard, SicakSuCard } from "@/components/FigureCards";
 import { PrintButton } from "@/components/PrintButton";
+import { MarkSeen } from "@/components/MarkSeen";
 import { cardClass, linkClass } from "@/lib/ui";
 
 export default async function PanelPage() {
@@ -26,6 +27,7 @@ export default async function PanelPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <MarkSeen section="periods" />
       <h1 className="text-3xl font-bold text-foreground">
         Hoş geldiniz{firstName ? `, ${firstName}` : ""}
       </h1>

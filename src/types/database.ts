@@ -14,6 +14,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_views: {
+        Row: {
+          account_id: string
+          section: string
+          seen_at: string
+        }
+        Insert: {
+          account_id: string
+          section: string
+          seen_at?: string
+        }
+        Update: {
+          account_id?: string
+          section?: string
+          seen_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_views_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           auth_user_id: string | null

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnnouncements, getAnnouncementAttachmentUrl } from "@/lib/data/announcements";
 import { cardClass, linkClass } from "@/lib/ui";
 import { isImageFile, stripUuidPrefix } from "@/lib/files";
+import { MarkSeen } from "@/components/MarkSeen";
 
 export default async function PanelDuyurularPage() {
   const supabase = await createClient();
@@ -15,6 +16,7 @@ export default async function PanelDuyurularPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <MarkSeen section="announcements" />
       <h2 className="text-lg font-semibold text-foreground">Duyurular</h2>
 
       {withAttachments.length === 0 ? (

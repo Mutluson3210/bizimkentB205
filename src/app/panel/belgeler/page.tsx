@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { cardClass, linkClass } from "@/lib/ui";
+import { MarkSeen } from "@/components/MarkSeen";
 
 export default async function PanelBelgelerPage() {
   const supabase = await createClient();
@@ -17,6 +18,7 @@ export default async function PanelBelgelerPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <MarkSeen section="documents" />
       <h2 className="text-lg font-semibold text-foreground">Belgeler</h2>
 
       {withUrls.length === 0 ? (

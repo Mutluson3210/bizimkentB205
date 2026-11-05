@@ -14,6 +14,11 @@ export const linkClass = "text-sm font-medium text-brand-navy hover:underline un
 export const navLinkClass =
   "rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-muted transition-colors hover:bg-brand-navy hover:text-white";
 
+/** Menüdeki "yeni içerik" göstergesi: sosyal medya bildirim balonu gibi,
+ * bağlantı yazısının sağ üstünde küçük kırmızı sayı. */
+export const navBadgeClass =
+  "inline-flex min-w-[1.05rem] items-center justify-center rounded-full bg-brand-red px-1 py-0.5 text-[0.625rem] font-bold leading-none text-white";
+
 export const labelClass = "flex flex-col gap-1.5 text-sm font-medium text-foreground";
 
 export const errorBoxClass = "whitespace-pre-wrap rounded-lg border border-brand-red/20 bg-brand-red-light px-3 py-2.5 text-sm text-brand-red";
