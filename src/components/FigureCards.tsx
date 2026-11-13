@@ -2,11 +2,32 @@ import type { PeriodFigures } from "@/lib/data/panel";
 import { formatTl } from "@/lib/data/panel";
 import { badgeClass, cardClass } from "@/lib/ui";
 
-function Row({ label, value }: { label: string; value: number | null | undefined }) {
+/** Devir/ödeme satırları tutara bakmadan sabit renkte vurgulanır: borç kırmızı,
+ * ödeme yeşil, devir lacivert. Vurgu satırın tamamına (etiket + tutar) uygulanır. */
+type RowTone = "red" | "green" | "navy";
+
+const rowToneClass: Record<RowTone, string> = {
+  red: "font-bold text-brand-red",
+  green: "font-bold text-brand-green",
+  navy: "font-bold text-brand-navy",
+};
+
+function Row({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | null | undefined;
+  tone?: RowTone;
+}) {
+  const emphasis = tone ? rowToneClass[tone] : "";
   return (
     <div className="flex items-center justify-between py-2 text-sm">
-      <span className="text-muted">{label}</span>
-      <span className="font-medium tabular-nums text-foreground">{formatTl(value)}</span>
+      <span className={emphasis || "text-muted"}>{label}</span>
+      <span className={`tabular-nums ${emphasis || "font-medium text-foreground"}`}>
+        {formatTl(value)}
+      </span>
     </div>
   );
 }
@@ -48,15 +69,16 @@ export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
       ) : (
         <>
           {aidat.devir_aidat !== null && (
-            <Row label="Önceki Ay Aidat Borcu" value={aidat.devir_aidat} />
+            <Row label="Önceki Ay Aidat Borcu" value={aidat.devir_aidat} tone="red" />
           )}
           {aidat.onceki_ay_tahsilati !== null && (
             <Row
               label="Önceki Ay Aidat Borcu İçin Yaptığınız Ödeme"
               value={aidat.onceki_ay_tahsilati}
+              tone="green"
             />
           )}
-          <Row label="Önceki Aydan Devir" value={aidat.onceki_aydan_devir} />
+          <Row label="Önceki Aydan Devir" value={aidat.onceki_aydan_devir} tone="navy" />
           <Row label="Gecikme Tazminatı" value={aidat.gecikme_tazminati} />
           <Row label="Isınma / Doğalgaz" value={aidat.isinma_dogalgaz} />
           <Row label="Sıcak Su" value={aidat.sicak_su} />
@@ -78,15 +100,16 @@ export function DemirbasCard({ demirbas }: { demirbas: PeriodFigures["demirbas"]
       ) : (
         <>
           {demirbas.devir_demirbas !== null && (
-            <Row label="Önceki Ay Demirbaş Borcu" value={demirbas.devir_demirbas} />
+            <Row label="Önceki Ay Demirbaş Borcu" value={demirbas.devir_demirbas} tone="red" />
           )}
           {demirbas.onceki_ay_tahsilati !== null && (
             <Row
               label="Önceki Ay Demirbaş Borcu İçin Yaptığınız Ödeme"
               value={demirbas.onceki_ay_tahsilati}
+              tone="green"
             />
           )}
-          <Row label="Önceki Aydan Devir" value={demirbas.onceki_aydan_devir} />
+          <Row label="Önceki Aydan Devir" value={demirbas.onceki_aydan_devir} tone="navy" />
           <Row label="Gecikme Tazminatı" value={demirbas.gecikme_tazminati} />
           {/* Excel'de kalem sütunu açıldığında başlığı parantez içinde yazılır;
               sütun hiç yoksa (boş dizi) tek bir sıfır satırı gösterilir. */}
