@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { getAllAnnouncements, getAnnouncementAttachmentUrl } from "@/lib/data/admin";
-import { cardClass, linkClass, primaryButtonClass } from "@/lib/ui";
+import { cardClass, linkClass, primaryButtonClass, successBoxClass } from "@/lib/ui";
 import { isImageFile, stripUuidPrefix } from "@/lib/files";
 import { deleteAnnouncementAction } from "./actions";
 
-export default async function DuyurularPage() {
+export default async function DuyurularPage(props: PageProps<"/admin/duyurular">) {
+  // Duyuru yayınlandıktan sonra bildirim sonucu buraya redirect ile taşınır.
+  const params = await props.searchParams;
+  const pushNotice = describePushResult(params);
+
   const announcements = await getAllAnnouncements();
   const withAttachments = await Promise.all(
     announcements.map(async (a) => ({
@@ -21,6 +25,8 @@ export default async function DuyurularPage() {
           Yeni Duyuru
         </Link>
       </div>
+
+      {pushNotice && <p className={successBoxClass}>{pushNotice}</p>}
 
       {withAttachments.length === 0 ? (
         <p className={`${cardClass} text-sm text-muted`}>Henüz hiç duyuru yayınlanmadı.</p>
@@ -60,4 +66,24 @@ export default async function DuyurularPage() {
       )}
     </div>
   );
+}
+
+/** ?push=... parametresini okunabilir bir cümleye çevirir. */
+function describePushResult(
+  params: Awaited<PageProps<"/admin/duyurular">["searchParams"]>,
+): string | null {
+  const push = typeof params.push === "string" ? params.push : null;
+  if (!push) return null;
+
+  if (push === "atlandi") {
+    const not = typeof params.not === "string" ? params.not : "sebep belirtilmedi";
+    return `Duyuru yayınlandı. Bildirim gönderilmedi: ${not}.`;
+  }
+
+  const sent = Number(push);
+  const failed = Number(typeof params.basarisiz === "string" ? params.basarisiz : 0);
+  if (!Number.isFinite(sent)) return null;
+
+  const base = `Duyuru yayınlandı. ${sent} cihaza bildirim gönderildi`;
+  return failed > 0 ? `${base}, ${failed} cihaza ulaşılamadı.` : `${base}.`;
 }

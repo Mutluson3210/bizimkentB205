@@ -72,6 +72,17 @@ export default function YeniDuyuruPage() {
           <input ref={fileInputRef} name="attachment" type="file" className={inputClass} />
         </label>
 
+        <label className="flex items-start gap-2.5 text-sm font-medium text-foreground">
+          <input type="checkbox" name="sendPush" defaultChecked className="mt-0.5 size-4 accent-brand-navy" />
+          <span>
+            Bildirim gönder
+            <span className="mt-0.5 block text-xs font-normal text-muted">
+              Bildirimi açmış sakinlerin telefonuna duyuru baloncuğu düşer. Küçük
+              düzeltmelerde işareti kaldırabilirsiniz.
+            </span>
+          </span>
+        </label>
+
         {(uploadError || state.error) && <p className={errorBoxClass}>{uploadError ?? state.error}</p>}
 
         <button type="submit" disabled={pending || uploading} className={primaryButtonClass}>

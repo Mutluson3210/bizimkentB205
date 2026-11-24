@@ -5,6 +5,7 @@ import { getCurrentAccount } from "@/lib/data/panel";
 import { getUnreadCounts } from "@/lib/data/notifications";
 import { Logo } from "@/components/Logo";
 import { Footer } from "@/components/Footer";
+import { PushToggle } from "@/components/PushToggle";
 import { navBadgeClass, navLinkClass } from "@/lib/ui";
 import { logoutAction } from "./actions";
 
@@ -53,6 +54,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             {roleLabel}
           </span>
         </div>
+        <PushToggle />
         {children}
         <Footer />
       </div>

@@ -10,7 +10,7 @@
  * activate adımında silinir.
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `b205-static-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
 
@@ -105,3 +105,54 @@ async function cacheFirst(request) {
   }
   return response;
 }
+
+/* --- Duyuru bildirimleri ---------------------------------------------- */
+
+const DEFAULT_NOTIFICATION_URL = "/panel/duyurular";
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    // Beklenmedik gövde: bildirimi yutmak yerine genel bir metinle göster.
+    payload = {};
+  }
+
+  const title = payload.title || "Bizimkent B205";
+  const options = {
+    body: payload.body || "Yeni bir duyuru var.",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    lang: "tr",
+    // Aynı etiketli bildirimler üst üste yığılmaz, sonuncusu öncekini değiştirir.
+    tag: payload.tag || "duyuru",
+    data: { url: payload.url || DEFAULT_NOTIFICATION_URL },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || DEFAULT_NOTIFICATION_URL;
+
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+
+      // Uygulama zaten açıksa yeni pencere açma; açık olanı kullan.
+      for (const client of windows) {
+        if (new URL(client.url).pathname === target) {
+          return client.focus();
+        }
+      }
+      const open = windows[0];
+      if (open && "navigate" in open) {
+        await open.navigate(target);
+        return open.focus();
+      }
+      return self.clients.openWindow(target);
+    })(),
+  );
+});

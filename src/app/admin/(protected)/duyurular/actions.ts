@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAnnouncement, deleteAnnouncement, createAnnouncementAttachmentUploadUrl, type SignedUpload } from "@/lib/data/admin";
+import { sendPushToAll } from "@/lib/push/send";
 
 export type CreateAnnouncementState = { error?: string };
 
@@ -27,7 +28,24 @@ export async function createAnnouncementAction(
   }
 
   await createAnnouncement(title, body, attachmentPath);
-  redirect("/admin/duyurular");
+
+  // Bildirim duyurudan daha az önemli: sendPushToAll hata fırlatmaz, sonucu
+  // döner. Gönderim başarısız olsa bile duyuru yayında ve sakin panelden
+  // görür — bu yüzden akışı kesmiyoruz, sonucu redirect ile raporluyoruz.
+  let pushInfo = "";
+  if (formData.get("sendPush")) {
+    const result = await sendPushToAll({
+      title,
+      // Uzun duyurunun tamamı bildirim baloncuğuna sığmaz; ilk cümleleri yeter.
+      body: body.length > 120 ? `${body.slice(0, 117)}...` : body,
+      url: "/panel/duyurular",
+    });
+    pushInfo = result.skipped
+      ? `?push=atlandi&not=${encodeURIComponent(result.skipped)}`
+      : `?push=${result.sent}&basarisiz=${result.failed}`;
+  }
+
+  redirect(`/admin/duyurular${pushInfo}`);
 }
 
 export async function deleteAnnouncementAction(id: string) {
