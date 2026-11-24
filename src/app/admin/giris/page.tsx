@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { SiteSeal } from "@/components/Logo";
 import { cardClass, errorBoxClass, inputClass, labelClass, linkClass, primaryButtonClass } from "@/lib/ui";
+import { PasswordField } from "@/components/PasswordField";
 import { adminLoginAction, type AdminLoginState } from "./actions";
 
 const initialState: AdminLoginState = {};
@@ -18,13 +19,10 @@ export default function AdminGirisPage() {
       <form action={formAction} className={`flex w-full max-w-sm flex-col gap-4 ${cardClass}`}>
         <label className={labelClass}>
           E-posta
-          <input name="email" type="email" required className={inputClass} />
+          <input name="email" type="email" required autoComplete="username" className={inputClass} />
         </label>
 
-        <label className={labelClass}>
-          Şifre
-          <input name="password" type="password" required className={inputClass} />
-        </label>
+        <PasswordField />
 
         {state.error && <p className={errorBoxClass}>{state.error}</p>}
 

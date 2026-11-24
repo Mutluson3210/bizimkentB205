@@ -20,9 +20,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+        {/* Dar ekranda logo ve menü alt alta — bkz. panel/layout.tsx */}
+        <div className="mx-auto flex max-w-4xl flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <Logo size={34} subtitle="Yönetim" />
-          <nav className="flex flex-wrap items-center gap-1">
+          <nav className="flex flex-wrap items-center gap-1 sm:justify-end">
             <Link href="/admin" className={navLinkClass}>
               Dönemler
             </Link>

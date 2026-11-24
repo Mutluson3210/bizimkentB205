@@ -23,9 +23,13 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen">
       <header className="border-b border-border bg-card print:hidden">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
+        {/* Dar ekranda logo ve menü alt alta. Logo whitespace-nowrap +
+            shrink-0 olduğu için yan yana dizilişte menüye yeterli yer
+            kalmıyor ve öğeler sağdan ekran dışına taşıyordu (iPhone'un
+            "Büyütülmüş" görüntü ayarında ekran 320pt'ye düşüyor). */}
+        <div className="mx-auto flex max-w-2xl flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <Logo size={34} />
-          <nav className="flex flex-wrap items-center gap-1">
+          <nav className="flex flex-wrap items-center gap-1 sm:justify-end">
             <NavLink href="/panel" label="Güncel Ay" count={unread.periods} />
             <Link href="/panel/gecmis" className={navLinkClass}>
               Geçmiş Aylar

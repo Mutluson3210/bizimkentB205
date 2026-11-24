@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
 import { cardClass, errorBoxClass, inputClass, labelClass, linkClass, primaryButtonClass } from "@/lib/ui";
 import type { PublicUnit } from "@/lib/data/public";
+import { PasswordField } from "@/components/PasswordField";
 import { loginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
@@ -77,10 +78,7 @@ export function GirisForm({ units }: { units: PublicUnit[] }) {
         </div>
       </fieldset>
 
-      <label className={labelClass}>
-        Şifre
-        <input name="password" type="password" required className={inputClass} />
-      </label>
+      <PasswordField />
 
       {state.error && <p className={errorBoxClass}>{state.error}</p>}
 
