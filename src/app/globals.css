@@ -37,3 +37,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Uygulama ana ekrandan (standalone) açıldığında kurulum yardımı anlamsız;
+   gizlenir. Tailwind'in arbitrary media variant'ı bu sorguyu üretmediği için
+   elle yazıldı. */
+@media (display-mode: standalone) {
+  .hide-when-installed {
+    display: none !important;
+  }
+}

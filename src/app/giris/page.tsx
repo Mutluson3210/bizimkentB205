@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteSeal } from "@/components/Logo";
 import { getPublicUnitDirectory } from "@/lib/data/public";
+import { InstallHelp } from "@/components/InstallHelp";
 import { GirisForm } from "./GirisForm";
 
 // Blok/daire listesi service-role ile (cookie'siz) çekildiği için Next bunu
@@ -14,6 +15,7 @@ export default async function GirisPage() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-12">
       <SiteSeal size={120} subtitle="Sakin Girişi" />
       <GirisForm units={units} />
+      <InstallHelp />
       <Link href="/admin/giris" className="text-sm font-medium text-muted hover:text-brand-navy hover:underline">
         Yönetici Girişi
       </Link>

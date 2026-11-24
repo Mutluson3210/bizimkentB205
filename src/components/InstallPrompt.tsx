@@ -10,8 +10,10 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "b205:install-dismissed-at";
-const DISMISS_DAYS = 30;
+export const DISMISS_KEY = "b205:install-dismissed-at";
+// Kısa tutuluyor: yanlışlıkla kapatan kişi haftaya tekrar görsün. Kalıcı
+// çıkış yolu için giriş sayfasındaki InstallHelp bağlantısı var.
+const DISMISS_DAYS = 7;
 
 function isStandalone(): boolean {
   return (
