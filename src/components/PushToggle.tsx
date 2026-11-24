@@ -22,17 +22,27 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 type State =
   | { kind: "loading" }
   /** Tarayıcı push desteklemiyor ya da iOS'ta uygulama kurulu değil. */
-  | { kind: "unavailable"; reason: "unsupported" | "ios-needs-install" }
+  | { kind: "unavailable"; reason: "unsupported" | "ios-needs-install" | "ios-too-old" }
   | { kind: "off" }
   | { kind: "on"; endpoint: string }
   /** Kullanıcı izni reddetmiş; tarayıcı ayarından açması gerek. */
-  | { kind: "blocked" };
+  | { kind: "blocked" }
+  /** Service worker aktif olmadı — sayfa yenilenince düzelir. */
+  | { kind: "sw-not-ready" };
 
 function isStandalone(): boolean {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     (window.navigator as Navigator & { standalone?: boolean }).standalone === true
   );
+}
+
+/** serviceWorker.ready'yi en fazla 5 saniye bekler. Süre dolarsa null. */
+async function readyWithTimeout(): Promise<ServiceWorkerRegistration | null> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 5000)),
+  ]);
 }
 
 function isIos(): boolean {
@@ -56,10 +66,15 @@ export function PushToggle() {
       if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
         // iPhone'da push yalnızca ana ekrana kurulmuş uygulamada çalışır —
         // Safari sekmesinde PushManager hiç tanımlı olmaz.
-        setState({
-          kind: "unavailable",
-          reason: isIos() && !isStandalone() ? "ios-needs-install" : "unsupported",
-        });
+        // iPhone'da push yalnızca iOS 16.4+ ve ana ekrana kurulmuş
+        // uygulamada çalışır. Kurulu olduğu halde desteklenmiyorsa sebep
+        // sürümdür; ikisini de sessiz geçmiyoruz.
+        const reason = isIos()
+          ? isStandalone()
+            ? ("ios-too-old" as const)
+            : ("ios-needs-install" as const)
+          : ("unsupported" as const);
+        setState({ kind: "unavailable", reason });
         return;
       }
 
@@ -68,10 +83,18 @@ export function PushToggle() {
         return;
       }
 
-      const registration = await navigator.serviceWorker.ready;
+      // DİKKAT: serviceWorker.ready, aktif bir service worker yoksa hiç
+      // çözülmez — sonsuza kadar bekler. Zaman aşımı olmadan bileşen
+      // "yükleniyor" durumunda kalıp sessizce hiçbir şey göstermez.
+      const registration = await readyWithTimeout();
+      if (!registration) {
+        setState({ kind: "sw-not-ready" });
+        return;
+      }
+
       const existing = await registration.pushManager.getSubscription();
       setState(existing ? { kind: "on", endpoint: existing.endpoint } : { kind: "off" });
-    })().catch(() => setState({ kind: "unavailable", reason: "unsupported" }));
+    })().catch(() => setState({ kind: "sw-not-ready" }));
   }, []);
 
   const enable = useCallback(async () => {
@@ -146,8 +169,18 @@ export function PushToggle() {
     if (state.reason === "unsupported") return null;
     return (
       <p className="mb-6 text-xs text-muted">
-        Duyuru bildirimi almak için önce bu sayfayı ana ekranınıza ekleyin —
-        iPhone&rsquo;da bildirimler yalnızca ana ekrandan açılan uygulamada çalışır.
+        {state.reason === "ios-needs-install"
+          ? "Duyuru bildirimi almak için önce bu sayfayı ana ekranınıza ekleyin — iPhone'da bildirimler yalnızca ana ekrandan açılan uygulamada çalışır."
+          : "Telefonunuzun iOS sürümü web bildirimlerini desteklemiyor; bunun için iOS 16.4 veya üstü gerekiyor."}
+      </p>
+    );
+  }
+
+  if (state.kind === "sw-not-ready") {
+    return (
+      <p className="mb-6 text-xs text-muted">
+        Bildirim ayarı henüz hazır değil. Sayfayı bir kez yenileyin; ana ekrana
+        eklediyseniz uygulamayı tamamen kapatıp yeniden açın.
       </p>
     );
   }
@@ -162,16 +195,19 @@ export function PushToggle() {
   }
 
   if (state.kind === "on") {
+    // DİKKAT: Düğme yazısı "Kapat" OLMAMALI. Türkçede hem "bu mesajı kapat"
+    // hem "bildirimleri kapat" anlamına geliyor; kullanıcı mesajı kapattığını
+    // sanıp aboneliğini siliyor. Eylem her zaman açıkça yazılmalı.
     return (
       <div className="mb-6 flex items-center justify-between gap-3 text-xs text-muted">
-        <span>🔔 Yeni duyurular telefonunuza bildirim olarak gelecek.</span>
+        <span>🔔 Duyuru bildirimleri açık.</span>
         <button
           type="button"
           onClick={disable}
           disabled={busy}
           className="shrink-0 font-medium text-brand-navy hover:underline disabled:opacity-50"
         >
-          {busy ? "..." : "Kapat"}
+          {busy ? "Kapatılıyor..." : "Bildirimleri kapat"}
         </button>
       </div>
     );
