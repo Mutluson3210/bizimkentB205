@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:accounts": "tsx scripts/seed-accounts.ts"
+    "seed:accounts": "tsx scripts/seed-accounts.ts",
+    "sms:test": "tsx --require ./scripts/_stub-server-only.cjs scripts/send-test-sms.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.9.0",

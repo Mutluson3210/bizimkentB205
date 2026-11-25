@@ -1,0 +1,33 @@
+# /etc/systemd/system/sms-relay.service
+[Unit]
+Description=Bizimkent B205 SMS aktaricisi (Verimor)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/sms-relay/server.js
+# Sifreler buradan okunur; dosya root'a ait ve 0600 olmali.
+# systemd dosyayi yetki dusurmeden ONCE root olarak okur.
+EnvironmentFile=/etc/sms-relay.env
+Restart=always
+RestartSec=5
+
+# Servise ait gecici bir kullanici uretilir; kalici bir hesap acmak gerekmez.
+DynamicUser=yes
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=no
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

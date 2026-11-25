@@ -1,9 +1,15 @@
 import "server-only";
 
-// Verimor SMS API: POST https://sms.verimor.com.tr/v2/send.json
-// Başarılı yanıt düz metin kampanya id'si; hata durumunda string kod döner
-// (INSUFFICIENT_CREDITS, INVALID_DESTINATION_ADDRESS, vb).
-const VERIMOR_ENDPOINT = "https://sms.verimor.com.tr/v2/send.json";
+// SMS gönderimi, Verimor'a DOĞRUDAN değil sabit IP'li aktarıcı üzerinden yapılır
+// (bkz. sms-relay/README.md). Sebebi: Verimor BTK yönergesi gereği isteklerin
+// sabit bir IP'den gelmesini zorunlu tutuyor, Vercel ise sabit giden IP vermiyor.
+// Verimor kullanıcı adı/şifresi bu yüzden burada DEĞİL aktarıcıda tutulur;
+// Vercel'in elinde yalnızca aktarıcı token'ı vardır.
+//
+// Aktarıcı, Verimor'un yanıtını aynen geçirir: başarı = HTTP 200 + sayısal
+// kampanya id'si, hata = string kod (INSUFFICIENT_CREDITS, vb).
+
+const RELAY_TIMEOUT_MS = 20_000;
 
 export type SendSmsResult = { ok: true; raw: string } | { ok: false; raw: string };
 
@@ -17,34 +23,31 @@ export function normalizePhone(raw: string): string {
 }
 
 export async function sendSms(phone: string, message: string): Promise<SendSmsResult> {
-  const username = process.env.VERIMOR_USERNAME;
-  const password = process.env.VERIMOR_PASSWORD;
+  const relayUrl = process.env.SMS_RELAY_URL;
+  const relayToken = process.env.SMS_RELAY_TOKEN;
 
-  if (!username || !password) {
-    return { ok: false, raw: "VERIMOR_USERNAME/VERIMOR_PASSWORD .env.local içinde tanımlı değil" };
-  }
-
-  const body: Record<string, unknown> = {
-    username,
-    password,
-    messages: [{ dest: normalizePhone(phone), msg: message }],
-  };
-  if (process.env.VERIMOR_SOURCE_ADDR) {
-    body.source_addr = process.env.VERIMOR_SOURCE_ADDR;
+  if (!relayUrl || !relayToken) {
+    return { ok: false, raw: "SMS_RELAY_URL/SMS_RELAY_TOKEN tanımlı değil" };
   }
 
   try {
-    const res = await fetch(VERIMOR_ENDPOINT, {
+    const res = await fetch(relayUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${relayToken}`,
+      },
+      body: JSON.stringify({ dest: normalizePhone(phone), msg: message }),
+      // Aktarıcı düşerse serverless fonksiyon kendi süre limitine kadar
+      // beklemesin; 72 dairelik gönderimde bu baştan sona kilitlenme olurdu.
+      signal: AbortSignal.timeout(RELAY_TIMEOUT_MS),
     });
     const text = (await res.text()).trim();
 
-    // Başarılı yanıt sayısal bir kampanya id'si; hata yanıtları büyük harfli kod.
     const isSuccess = res.ok && /^\d+$/.test(text);
     return isSuccess ? { ok: true, raw: text } : { ok: false, raw: text || `HTTP ${res.status}` };
   } catch (err) {
-    return { ok: false, raw: err instanceof Error ? err.message : "Bilinmeyen ağ hatası" };
+    const reason = err instanceof Error ? err.message : "Bilinmeyen ağ hatası";
+    return { ok: false, raw: `Aktarıcıya ulaşılamadı: ${reason}` };
   }
 }

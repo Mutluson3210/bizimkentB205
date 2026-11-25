@@ -1,0 +1,17 @@
+# /etc/caddy/Caddyfile
+#
+# Caddy, Let's Encrypt sertifikasini kendisi alir ve kendisi yeniler.
+# Aktarici yalnizca 127.0.0.1'i dinledigi icin dis dunyaya TEK kapi burasi.
+#
+# TLS zorunlu: Vercel -> aktarici isteginde hem RELAY_TOKEN hem sakinlerin
+# telefon numarasi ve mesaj metni geciyor; duz HTTP'de bunlar aciktan akar.
+sms.bizimkentb205.com {
+	reverse_proxy 127.0.0.1:8080
+
+	# Sadece bu iki yol disa acilir.
+	@disallowed not path /send /health
+	respond @disallowed 404
+}
+
+# Erisim loglari journald'a gider: journalctl -u caddy
+# (Ayri dosyaya yazmak paketin systemd kisitlamalariyla cakisiyor; gerek de yok.)
