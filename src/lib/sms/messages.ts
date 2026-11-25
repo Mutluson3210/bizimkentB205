@@ -166,7 +166,7 @@ export function buildDebtMessage(opts: {
   // "Ödeme için siteye girin" demiyoruz: site ödeme almıyor, yalnızca
   // bilgi gösteriyor (banka/IBAN footer'da ve PDF makbuzda duruyor).
   // Uygulama = siteyle aynı yer, telefona kurulabilen PWA hali.
-  parts.push("Detaylar için siteye ya da uygulamaya giriş yapabilirsiniz.");
+  parts.push("Detaylar için siteye veya uygulamaya girin: bizimkentb205.com");
   return toSmsSafe(parts.join(" "));
 }
 
