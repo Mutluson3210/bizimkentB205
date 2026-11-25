@@ -123,7 +123,12 @@ const server = http.createServer(async (req, res) => {
   };
 
   // Kimlik doğrulaması yok: dışarıdan "ayakta mı" kontrolü için.
-  if (req.method === "GET" && req.url === "/health") return send(200, "ok");
+  // HEAD da kabul edilir — uptime izleyicilerinin çoğu (UptimeRobot dahil)
+  // varsayılan olarak HEAD gönderir; yalnızca GET tanınırsa 404 görüp servisi
+  // "down" sanarlar. Node, HEAD yanıtında gövdeyi kendisi kırpar.
+  if ((req.method === "GET" || req.method === "HEAD") && req.url === "/health") {
+    return send(200, "ok");
+  }
 
   if (req.url !== "/send") return send(404, "not found");
   if (req.method !== "POST") return send(405, "method not allowed");
