@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Aktarıcı Next uygulamasının parçası değil: ayrı bir makinede düz Node
+    // (CommonJS) olarak çalışıyor, bu yapılandırmanın TypeScript/React
+    // kurallarına tabi değil. Bkz. sms-relay/README.md
+    "sms-relay/**",
   ]),
 ]);
 
