@@ -89,6 +89,85 @@ export async function getMonthlySmsUsage(limit = 500): Promise<{ used: number; l
   return { used: count ?? 0, limit };
 }
 
+/**
+ * Aktarıcı sessizce düşebildiği için panelde görünür kılınan durum.
+ *
+ * Neden iki ayrı sinyal: `sms_log` yalnızca BİRİ gönderim denediğinde dolar.
+ * Kimse SMS tetiklemediyse aktarıcı günlerce ölü olabilir ve log boş kalır —
+ * bu yüzden ayrıca /health canlı yoklanıyor. Şifre sıfırlama akışı numara
+ * sızdırmamak için bilerek sessiz (bkz. lib/sms/otp.ts), yani sakin de
+ * şikayet etmez; arızayı yöneticinin görmesinin tek yolu burası.
+ */
+export type SmsHealth = {
+  relay: "up" | "down" | "unconfigured";
+  relayDetail: string | null;
+  /**
+   * SON BAŞARILI gönderimden bu yana üst üste gelen hata sayısı — "son 7
+   * günde kaç hata" değil. Çözülmüş bir arıza (ör. kurulum sırasındaki
+   * denemeler) paneli günlerce kırmızı tutmasın; sinyal "şu an bozuk mu"
+   * sorusunu yanıtlasın diye.
+   */
+  recentFailures: number;
+  lastFailure: { at: string; message: string } | null;
+};
+
+const RELAY_HEALTH_TIMEOUT_MS = 4000;
+/** Son başarıdan sonraki hatalar bu kadar geriye bakılarak sayılır. */
+const FAILURE_WINDOW_DAYS = 30;
+const FAILURE_SCAN_LIMIT = 200;
+
+async function probeRelay(): Promise<Pick<SmsHealth, "relay" | "relayDetail">> {
+  const sendUrl = process.env.SMS_RELAY_URL;
+  if (!sendUrl || !process.env.SMS_RELAY_TOKEN) {
+    return { relay: "unconfigured", relayDetail: "SMS_RELAY_URL/SMS_RELAY_TOKEN tanımlı değil" };
+  }
+
+  // /health kimlik doğrulaması istemiyor; token'ı yoklamaya göndermeye gerek yok.
+  const healthUrl = sendUrl.replace(/\/send$/, "/health");
+  try {
+    const res = await fetch(healthUrl, {
+      signal: AbortSignal.timeout(RELAY_HEALTH_TIMEOUT_MS),
+      cache: "no-store",
+    });
+    const text = (await res.text()).trim();
+    return res.ok && text === "ok"
+      ? { relay: "up", relayDetail: null }
+      : { relay: "down", relayDetail: `Beklenmeyen yanıt: HTTP ${res.status} ${text}`.trim() };
+  } catch (err) {
+    return { relay: "down", relayDetail: err instanceof Error ? err.message : "Bilinmeyen ağ hatası" };
+  }
+}
+
+export async function getSmsHealth(): Promise<SmsHealth> {
+  const supabase = createServiceClient();
+  const since = new Date(Date.now() - FAILURE_WINDOW_DAYS * 86_400_000).toISOString();
+
+  const [relayDurumu, { data: kayitlar }] = await Promise.all([
+    probeRelay(),
+    supabase
+      .from("sms_log")
+      .select("created_at, status, provider_response")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(FAILURE_SCAN_LIMIT),
+  ]);
+
+  // En yeniden geriye doğru sayılır, ilk başarıda durulur: aradaki hatalar
+  // "henüz telafi edilmemiş" olanlardır.
+  let ardisikHata = 0;
+  let sonHata: { at: string; message: string } | null = null;
+  for (const kayit of kayitlar ?? []) {
+    if (kayit.status !== "failed") break;
+    ardisikHata += 1;
+    sonHata ??= {
+      at: kayit.created_at,
+      message: kayit.provider_response ?? "Sebep kaydedilmemiş",
+    };
+  }
+
+  return { ...relayDurumu, recentFailures: ardisikHata, lastFailure: sonHata };
+}
+
 export type PeriodDetailAccount = {
   accountId: string;
   role: "owner" | "tenant";

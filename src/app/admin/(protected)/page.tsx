@@ -1,17 +1,50 @@
 import Link from "next/link";
-import { getAllPeriodsWithCounts, getMonthlySmsUsage, getLatestPeriodSummary } from "@/lib/data/admin";
+import { getAllPeriodsWithCounts, getMonthlySmsUsage, getLatestPeriodSummary, getSmsHealth } from "@/lib/data/admin";
 import { periodLabel, formatTl } from "@/lib/data/panel";
 import { badgeClass, cardClass, primaryButtonClass } from "@/lib/ui";
 
 export default async function AdminDashboardPage() {
-  const [periods, smsUsage, summary] = await Promise.all([
+  const [periods, smsUsage, summary, smsHealth] = await Promise.all([
     getAllPeriodsWithCounts(),
     getMonthlySmsUsage(),
     getLatestPeriodSummary(),
+    getSmsHealth(),
   ]);
+
+  const smsSorunlu = smsHealth.relay !== "up" || smsHealth.recentFailures > 0;
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Aktarıcı sessizce düşebiliyor ve şifre sıfırlama akışı numara
+          sızdırmamak için bilerek sessiz — arızayı yöneticinin görebileceği
+          tek yer burası. Bu yüzden sayfanın en üstünde. */}
+      {smsSorunlu && (
+        <div className="rounded-xl border border-brand-red/20 bg-brand-red-light p-4">
+          <p className="text-sm font-semibold text-brand-red">SMS gönderiminde sorun var</p>
+          <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-sm text-brand-red">
+            {smsHealth.relay === "down" && (
+              <li>Aktarıcıya ulaşılamıyor{smsHealth.relayDetail ? `: ${smsHealth.relayDetail}` : ""}</li>
+            )}
+            {smsHealth.relay === "unconfigured" && (
+              <li>Aktarıcı ayarlanmamış{smsHealth.relayDetail ? `: ${smsHealth.relayDetail}` : ""}</li>
+            )}
+            {smsHealth.recentFailures > 0 && smsHealth.lastFailure && (
+              <li>
+                Son başarılı gönderimden bu yana {smsHealth.recentFailures} başarısız deneme.
+                Sonuncusu {new Date(smsHealth.lastFailure.at).toLocaleString("tr-TR")}:{" "}
+                {smsHealth.lastFailure.message}
+              </li>
+            )}
+          </ul>
+          {smsHealth.relay === "down" && (
+            <p className="mt-2 text-xs text-brand-red/80">
+              Aktarıcı Oracle Cloud&apos;daki sunucuda çalışıyor. Makine boşta kaldığı için durdurulmuş
+              olabilir; Oracle konsolundan başlatmak yeterli, aktarıcı ve sertifika servisi kendiliğinden
+              açılıyor.
+            </p>
+          )}
+        </div>
+      )}
       {summary && (
         <div className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold text-foreground">Aylık İstatistikler</h2>
@@ -44,6 +77,13 @@ export default async function AdminDashboardPage() {
               <p className="text-xs text-muted">Bu Ay Gönderilen SMS</p>
               <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
                 {smsUsage.used} / {smsUsage.limit}
+              </p>
+              {/* Sorun yokken de görünür: göstergenin kendisi çalışıyor mu,
+                  yönetici bunu bilsin. */}
+              <p
+                className={`mt-1 text-xs ${smsHealth.relay === "up" ? "text-brand-green" : "text-brand-red"}`}
+              >
+                {smsHealth.relay === "up" ? "● Servis çalışıyor" : "● Servise ulaşılamıyor"}
               </p>
             </div>
           </div>
