@@ -21,7 +21,9 @@ export const metadata: Metadata = {
   // iOS ana ekrandan açıldığında tarayıcı çubuğu olmadan, uygulama gibi açılsın.
   appleWebApp: {
     capable: true,
-    title: "B205",
+    // Ana ekranda ikonun altında yazan ad. manifest.ts'teki short_name ile
+    // aynı tutulmalı: Android oradan, iOS buradan okuyor.
+    title: "SİTE",
     statusBarStyle: "default",
   },
   other: {

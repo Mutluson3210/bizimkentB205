@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
     name: "Bizimkent B205 A/B",
-    short_name: "B205",
+    short_name: "SİTE",
     description: "Bizimkent B205 aidat, demirbaş ve sıcak su bilgilendirme portalı",
     lang: "tr",
     dir: "ltr",
