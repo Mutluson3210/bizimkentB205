@@ -11,8 +11,14 @@ import type { PublicUnit } from "@/lib/data/public";
  * yazdırmak yazım hatasına çok açıktı ("B2 05 A 13", "b205a13", "13"...) ve
  * şifre sıfırlama akışı hesap varlığını sızdırmamak için hatada BİLEREK
  * sessiz kaldığından (bkz. lib/sms/otp.ts), yanlış yazan sakin ne SMS ne de
- * hata mesajı alıyordu. Listeden seçmek bu sınıf hatayı tamamen ortadan
- * kaldırıyor.
+ * hata mesajı alıyordu. Listeden seçmek bu sınıf hatayı ortadan kaldırıyor.
+ *
+ * Listeler BOŞ başlar ve seçim zorunludur. Önceden ilk blok/ilk daire hazır
+ * seçili geliyordu ve bunun bedeli canlıda görüldü: listeye dokunmayan bir
+ * sakin, farkında olmadan BAŞKASININ dairesi için şifre sıfırlama kodu
+ * istedi. Kendisi (akış sessiz olduğu için) hiçbir şey alamadı, kod ise
+ * ilgisiz bir sakinin telefonuna gitti. Hazır seçili varsayılan, sessiz bir
+ * akışla birleşince yanlış hedefi görünmez kılıyor.
  */
 export function UnitSelect({
   units,
@@ -30,25 +36,38 @@ export function UnitSelect({
     return Array.from(seen, ([code, name]) => ({ code, name }));
   }, [units]);
 
-  const [blockCode, setBlockCode] = useState(blocks[0]?.code ?? "");
-  const unitsInBlock = useMemo(() => units.filter((u) => u.blockCode === blockCode), [units, blockCode]);
-  const [daireNo, setDaireNo] = useState(unitsInBlock[0]?.daireNo ?? "");
+  const [blockCode, setBlockCode] = useState("");
+  const unitsInBlock = useMemo(
+    () => (blockCode ? units.filter((u) => u.blockCode === blockCode) : []),
+    [units, blockCode],
+  );
+  const [daireNo, setDaireNo] = useState("");
 
   function selectDaire(value: string) {
     setDaireNo(value);
     onDaireChange?.(value);
   }
 
+  // Blok değişince daire seçimi sıfırlanır: önceki bloktan kalan bir daire
+  // numarasıyla gönderim yapılamasın.
   function handleBlockChange(code: string) {
     setBlockCode(code);
-    selectDaire(units.find((u) => u.blockCode === code)?.daireNo ?? "");
+    selectDaire("");
   }
 
   return (
     <>
       <label className={labelClass}>
         Blok
-        <select value={blockCode} onChange={(e) => handleBlockChange(e.target.value)} className={inputClass}>
+        <select
+          required
+          value={blockCode}
+          onChange={(e) => handleBlockChange(e.target.value)}
+          className={inputClass}
+        >
+          <option value="" disabled>
+            Blok seçin
+          </option>
           {blocks.map((b) => (
             <option key={b.code} value={b.code}>
               {b.name}
@@ -62,10 +81,14 @@ export function UnitSelect({
         <select
           name="daireNo"
           required
+          disabled={!blockCode}
           value={daireNo}
           onChange={(e) => selectDaire(e.target.value)}
           className={inputClass}
         >
+          <option value="" disabled>
+            {blockCode ? "Daire seçin" : "Önce blok seçin"}
+          </option>
           {unitsInBlock.map((u) => (
             <option key={u.daireNo} value={u.daireNo}>
               {u.daireNo}
