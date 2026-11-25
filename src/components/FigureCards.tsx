@@ -1,5 +1,5 @@
 import type { PeriodFigures } from "@/lib/data/panel";
-import { formatTl } from "@/lib/data/panel";
+import { formatTl, parseYeniKalemler } from "@/lib/data/panel";
 import { badgeClass, cardClass } from "@/lib/ui";
 
 /** Devir/ödeme satırları tutara bakmadan sabit renkte vurgulanır: borç kırmızı,
@@ -45,21 +45,6 @@ function TotalRow({ value }: { value: number | null | undefined }) {
 }
 
 type Badge = { tone: "navy" | "green" | "red" | "gray"; text: string };
-
-type YeniKalem = { aciklama: string; tutar: number };
-
-/** `yeni_kalemler` jsonb olduğu için tipi `Json`; beklenen biçime uymayan
- * veriyi sessizce eler. null dönerse (dönem bu özellikten önce yüklendi)
- * satır hiç gösterilmez; boş dizi "o ay yeni kalem yok" demek. */
-function parseYeniKalemler(value: unknown): YeniKalem[] | null {
-  if (!Array.isArray(value)) return null;
-  return value.flatMap((item) => {
-    if (!item || typeof item !== "object") return [];
-    const { aciklama, tutar } = item as { aciklama?: unknown; tutar?: unknown };
-    if (typeof tutar !== "number") return [];
-    return [{ aciklama: typeof aciklama === "string" ? aciklama : "", tutar }];
-  });
-}
 
 export function AidatCard({ aidat }: { aidat: PeriodFigures["aidat"] }) {
   return (

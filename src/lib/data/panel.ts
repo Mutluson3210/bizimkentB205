@@ -99,6 +99,23 @@ export function formatTl(value: number | null | undefined): string {
   }).format(value ?? 0);
 }
 
+export type YeniKalem = { aciklama: string; tutar: number };
+
+/** `yeni_kalemler` jsonb olduğu için tipi `Json`; beklenen biçime uymayan
+ * veriyi sessizce eler. null dönerse (dönem bu özellikten önce yüklendi)
+ * kalem bilgisi yok demektir; boş dizi "o ay yeni kalem yok" demek.
+ * Hem panel kartı (FigureCards) hem borç SMS'i buradan okur — biçim
+ * değişirse tek yerde değişsin diye. */
+export function parseYeniKalemler(value: unknown): YeniKalem[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const { aciklama, tutar } = item as { aciklama?: unknown; tutar?: unknown };
+    if (typeof tutar !== "number") return [];
+    return [{ aciklama: typeof aciklama === "string" ? aciklama : "", tutar }];
+  });
+}
+
 export function periodLabel(p: { label: string; revision: number }): string {
   return p.revision > 0 ? `${p.label} — Düzeltme ${p.revision}` : p.label;
 }
