@@ -9,7 +9,11 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 const PER_ACCOUNT_COOLDOWN_MS = 60 * 1000;
 const PER_ACCOUNT_DAILY_CAP = 5;
-const SYSTEM_DAILY_CAP = 100; // 500 SMS/ay paketinin tek günde tüketilmesini önler
+// Paketin tek günde tüketilmesini önleyen tavan. Sakinlerin siteye ilk
+// kez toplu giriş yapacağı geçiş döneminde 100 düşük kalıyordu: 106 hane
+// aynı gün kod isterse bir kısmı tavana takılır ve (enumeration'ı önlemek
+// için akış sessiz olduğundan) hiçbir geri bildirim almazdı.
+const SYSTEM_DAILY_CAP = 200;
 
 function hashCode(code: string): string {
   return createHash("sha256").update(code).digest("hex");

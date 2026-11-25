@@ -3,7 +3,11 @@
 import { requestPasswordResetOtp, confirmPasswordReset } from "@/lib/sms/otp";
 import type { Role } from "@/lib/auth";
 
-export type RequestState = { sent?: boolean; error?: string };
+/** Kod gönderildiyse daire/rol geri döner: ikinci adım (kod + yeni şifre)
+ * bunları gizli alan olarak taşıyor. İstemcide ayrıca state tutmak yerine
+ * sunucunun aldığı değerleri yansıtması, iki tarafın ayrışma ihtimalini
+ * tamamen kaldırıyor. */
+export type RequestState = { sent?: boolean; error?: string; daireNo?: string; role?: Role };
 export type ConfirmState = { success?: boolean; error?: string };
 
 function delay(ms: number) {
@@ -27,7 +31,7 @@ export async function requestResetAction(
 
   await Promise.all([requestPasswordResetOtp(daireNo, role), delay(MIN_RESPONSE_MS)]);
 
-  return { sent: true };
+  return { sent: true, daireNo, role };
 }
 
 export async function confirmResetAction(
