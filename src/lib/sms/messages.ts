@@ -136,10 +136,10 @@ export function buildDebtMessage(opts: {
     }
   }
 
-  // Banka adı + IBAN yazmak yerine siteye yönlendiriliyor; ödeme bilgisi
-  // sitede ve PDF makbuzda zaten var. Kısa tutuluyor çünkü kalem dökümü
-  // mesajı ikinci segmente taşıyor, kapanış cümlesi de uzasın istemiyoruz.
-  parts.push("Odeme ve detay icin siteye giris yapin.");
+  // "Ödeme için siteye girin" demiyoruz: site ödeme almıyor, yalnızca
+  // bilgi gösteriyor (banka/IBAN footer'da ve PDF makbuzda duruyor).
+  // Uygulama = siteyle aynı yer, telefona kurulabilen PWA hali.
+  parts.push("Detaylar için siteye ya da uygulamaya giriş yapabilirsiniz.");
   return toSmsSafe(parts.join(" "));
 }
 
