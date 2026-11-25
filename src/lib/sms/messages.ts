@@ -94,7 +94,7 @@ export function buildDebtMessage(opts: {
 }): string {
   const { daireNo, periodLabel, role, aidat, demirbas } = opts;
 
-  const parts = [`Bizimkent B205 ${daireNo} - ${periodLabel}:`];
+  const parts = [`Bizimkent Sitesi ${daireNo} - ${periodLabel}:`];
 
   if (!aidat) {
     parts.push("Aidat verisi henüz girilmedi.");
@@ -144,5 +144,5 @@ export function buildDebtMessage(opts: {
 }
 
 export function buildOtpMessage(code: string): string {
-  return toSmsSafe(`Bizimkent B205: Şifre sıfırlama kodunuz ${code}. 10 dakika geçerlidir. Bu kodu kimseyle paylaşmayın.`);
+  return toSmsSafe(`Bizimkent Sitesi: Şifre sıfırlama kodunuz ${code}. 10 dakika geçerlidir. Bu kodu kimseyle paylaşmayın.`);
 }
