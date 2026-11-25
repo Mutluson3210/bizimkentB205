@@ -3,16 +3,43 @@ import { parseYeniKalemler } from "@/lib/data/panel";
 
 type Role = "owner" | "tenant";
 
-/** SMS maliyetini ikiye katlayan Unicode (GSM-7 dışı) segment'e düşmemek için
- * Türkçe özel karakterleri ASCII'ye çevirir ve TL tutarını "₺" yerine "TL" ile yazar. */
+/**
+ * Mesajı Verimor'un kabul ettiği karakter kümesine indirger.
+ *
+ * Türkçe harfler BOZULMAZ. Verimor'un boy tablosuna göre Ş ş Ğ ğ ç ı İ
+ * harfleri `datacoding=1` gerektiriyor ve bunun bedeli segment başına yalnızca
+ * 5-8 karakter (155/298 yerine 160/306); Ö ö Ü ü Ç ise normal kodlamada da
+ * geçerli, hiçbir bedeli yok. Yani Türkçe yazmak neredeyse ücretsiz.
+ *
+ * Asıl tehlike bu küme DIŞINDAKİ karakterler: tek bir uzun tire ya da akıllı
+ * tırnak mesajı Unicode'a (`datacoding=2`) düşürür ve kapasite 70 karaktere
+ * iner — maliyet iki üç katına çıkar. Bunlar özellikle demirbaş kalem
+ * adlarında beklenir, çünkü o metinler Excel sütun başlıklarından geliyor ve
+ * içeriğini biz denetlemiyoruz.
+ *
+ * Bu yüzden yaklaşım beyaz liste: bilinen karşılığı olanlar ASCII'ye çevrilir,
+ * geri kalan tanınmayan karakterler atılır.
+ */
 function toSmsSafe(text: string): string {
-  return text
-    .replace(/ş/g, "s").replace(/Ş/g, "S")
-    .replace(/ç/g, "c").replace(/Ç/g, "C")
-    .replace(/ğ/g, "g").replace(/Ğ/g, "G")
-    .replace(/ı/g, "i").replace(/İ/g, "I")
-    .replace(/ö/g, "o").replace(/Ö/g, "O")
-    .replace(/ü/g, "u").replace(/Ü/g, "U");
+  const karsiliklar: Record<string, string> = {
+    "\u2013": "-", "\u2014": "-", "\u2010": "-", "\u2011": "-", // – — ‐ ‑
+    "\u2018": "'", "\u2019": "'", "\u201A": "'", "\u2032": "'", // ' ' ‚ ′
+    "\u201C": '"', "\u201D": '"', "\u201E": '"', "\u2033": '"', // " " „ ″
+    "\u2026": "...", "\u00A0": " ", "\u2022": "-", "\u00B7": "-", // … nbsp • ·
+    "\u20BA": "TL", "\u00BD": "1/2", "\u00BC": "1/4", "\u00BE": "3/4", // ₺ ½ ¼ ¾
+  };
+  // Listede olmayan her şey (emoji, °, ™, Latin dışı alfabeler) beyaz liste
+  // tarafından atılır — anlamını koruyacak bir karşılığı olmadığı için.
+
+  // GSM-7 temel kümesi + Türkçe kaydırma tablosu. Dışındakiler atılır.
+  const izinli = /[A-Za-z0-9ŞşĞğİıÇçÖöÜü\n .,:;!?'"()\-+*\/=%&@_#$<>[\]]/;
+
+  return Array.from(text)
+    .map((harf) => karsiliklar[harf] ?? harf)
+    .join("")
+    .split("")
+    .filter((harf) => izinli.test(harf))
+    .join("");
 }
 
 function formatTutar(value: number | null | undefined): string {
@@ -105,8 +132,8 @@ export function buildDebtMessage(opts: {
       [
         { ad: "Devir", tutar: aidat.onceki_aydan_devir },
         { ad: "Sabit", tutar: aidat.sabit_aidat },
-        { ad: "Dogalgaz", tutar: aidat.isinma_dogalgaz },
-        { ad: "Sicak su", tutar: aidat.sicak_su },
+        { ad: "Doğalgaz", tutar: aidat.isinma_dogalgaz },
+        { ad: "Sıcak su", tutar: aidat.sicak_su },
         { ad: "Gecikme", tutar: aidat.gecikme_tazminati },
       ],
       aidat.toplam,
@@ -116,7 +143,7 @@ export function buildDebtMessage(opts: {
 
   if (role === "owner") {
     if (!demirbas) {
-      parts.push("Demirbas verisi henüz girilmedi.");
+      parts.push("Demirbaş verisi henüz girilmedi.");
     } else {
       // Demirbaş kalemleri aidattaki gibi sabit değil: Excel'de o ay hangi
       // sütunlar varsa `yeni_kalemler`e öyle giriyor (başlık = kalemin adı).
@@ -132,7 +159,7 @@ export function buildDebtMessage(opts: {
         ],
         demirbas.toplam,
       );
-      parts.push(tutarSatiri("Demirbas", demirbas.toplam, dokum));
+      parts.push(tutarSatiri("Demirbaş", demirbas.toplam, dokum));
     }
   }
 
