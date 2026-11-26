@@ -1,8 +1,13 @@
 "use client";
 
-import { Fragment, useActionState, useEffect, useMemo, useState } from "react";
+import { Fragment, useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import { badgeClass, inputClass } from "@/lib/ui";
-import { toggleAccountActiveAction, updateAccountAction, type UpdateAccountState } from "./actions";
+import {
+  toggleAccountActiveAction,
+  updateAccountAction,
+  resetAccountPasswordAction,
+  type UpdateAccountState,
+} from "./actions";
 
 type AccountRow = {
   id: string;
@@ -25,8 +30,28 @@ function normalize(s: string): string {
 
 const initialUpdateState: UpdateAccountState = {};
 
-function AccountCells({ acc, rowBg }: { acc: AccountRow; rowBg: string }) {
+function AccountCells({ acc, daireNo, rowBg }: { acc: AccountRow; daireNo: string; rowBg: string }) {
   const [editing, setEditing] = useState(false);
+  const [resetting, startReset] = useTransition();
+  const [resetInfo, setResetInfo] = useState<string | null>(null);
+
+  function handleResetPassword() {
+    const onay = window.confirm(
+      `${daireNo} ${acc.role === "owner" ? "ev sahibi" : "kiracı"} hesabının ` +
+        `(${acc.full_name}) şifresi geçersiz kılınacak.\n\n` +
+        `Mevcut şifreyle bir daha giriş yapılamaz. Yeni sakin, kayıtlı telefonuna kod ` +
+        `isteyerek "Şifremi unuttum" akışından kendi şifresini belirler.\n\nDevam edilsin mi?`,
+    );
+    if (!onay) return;
+    startReset(async () => {
+      try {
+        await resetAccountPasswordAction(acc.id);
+        setResetInfo("Şifre sıfırlandı.");
+      } catch (err) {
+        setResetInfo(err instanceof Error ? err.message : "Sıfırlanamadı.");
+      }
+    });
+  }
   const [state, formAction, pending] = useActionState(
     updateAccountAction.bind(null, acc.id),
     initialUpdateState,
@@ -114,7 +139,18 @@ function AccountCells({ acc, rowBg }: { acc: AccountRow; rowBg: string }) {
               {acc.is_active ? "Pasifleştir" : "Aktifleştir"}
             </button>
           </form>
+          {/* Daire el değiştirdiğinde eski sakinin bildiği şifre geçerli
+              kalmasın diye. Kırmızı ve onaylı: geri alınamaz. */}
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            disabled={resetting}
+            className="text-xs font-medium text-brand-red hover:underline disabled:opacity-50"
+          >
+            {resetting ? "Sıfırlanıyor..." : "Şifreyi Sıfırla"}
+          </button>
         </div>
+        {resetInfo && <p className="mt-1 text-xs text-muted">{resetInfo}</p>}
       </td>
     </Fragment>
   );
@@ -193,7 +229,7 @@ export function SakinlerTable({ units }: { units: UnitRow[] }) {
                   <td className={`border-b border-border py-3 text-foreground ${rowBg}`}>
                     {acc.role === "owner" ? "Ev Sahibi" : "Kiracı"}
                   </td>
-                  <AccountCells acc={acc} rowBg={rowBg} />
+                  <AccountCells acc={acc} daireNo={unit.daire_no} rowBg={rowBg} />
                 </tr>
               ));
             })}

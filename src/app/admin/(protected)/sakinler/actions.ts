@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -34,4 +35,38 @@ export async function updateAccountAction(
 
   revalidatePath("/admin/sakinler");
   return { success: true };
+}
+
+/**
+ * Hesabın şifresini kimseye gösterilmeyen rastgele bir değerle değiştirir —
+ * yani mevcut şifreyi geçersiz kılar.
+ *
+ * Neden gerekli: hesaplar kişiye değil daire+role bağlı (giriş kimliği
+ * `b205b34-tenant@...` biçiminde üretiliyor), bu yüzden daire el
+ * değiştirdiğinde aynı hesap yeni sakine devrediliyor. Pasifleştirip yeniden
+ * aktif etmek şifreyi sıfırlamadığı için eski sakinin bildiği şifre geçerli
+ * kalıyordu.
+ *
+ * Yeni şifre hiçbir yere yazılmaz; yeni sakin "Şifremi unuttum" akışından
+ * kendi şifresini belirler (kayıtlı telefonuna kod gelir).
+ */
+export async function resetAccountPasswordAction(accountId: string) {
+  const supabase = createServiceClient();
+
+  const { data: account } = await supabase
+    .from("accounts")
+    .select("auth_user_id")
+    .eq("id", accountId)
+    .maybeSingle();
+
+  if (!account?.auth_user_id) {
+    throw new Error("Bu hesabın giriş kullanıcısı yok, şifre sıfırlanamaz.");
+  }
+
+  const { error } = await supabase.auth.admin.updateUserById(account.auth_user_id, {
+    password: randomBytes(24).toString("base64url"),
+  });
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/sakinler");
 }
