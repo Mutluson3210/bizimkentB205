@@ -1,5 +1,11 @@
+/** iOS Safari, odaklanılan form alanının yazı boyutu 16px'in ALTINDAysa sayfayı
+ * kendiliğinden yakınlaştırır ve alan terk edilince geri döndürmez — sakin,
+ * daire seçip şifre yazdıktan sonra kendini ekrandan taşan bir sayfada bulur.
+ * Bu yüzden mobilde 16px (text-base), sm kırılımından itibaren eski 14px.
+ * Yakınlaştırmayı viewport'tan kısıtlamak (maximum-scale) çözüm değil:
+ * kasıtlı yakınlaştırmayı da engeller, erişilebilirliği bozar. */
 export const inputClass =
-  "w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand-navy/25 focus:border-brand-navy transition";
+  "w-full rounded-lg border border-border bg-white px-3 py-2.5 text-base sm:text-sm text-foreground placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand-navy/25 focus:border-brand-navy transition";
 
 export const cardClass = "rounded-xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]";
 
