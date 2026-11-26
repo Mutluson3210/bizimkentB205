@@ -195,20 +195,39 @@ export function PushToggle() {
   }
 
   if (state.kind === "on") {
-    // DİKKAT: Düğme yazısı "Kapat" OLMAMALI. Türkçede hem "bu mesajı kapat"
-    // hem "bildirimleri kapat" anlamına geliyor; kullanıcı mesajı kapattığını
-    // sanıp aboneliğini siliyor. Eylem her zaman açıkça yazılmalı.
+    // Açık durum, kapalı durumla AYNI kart düzeninde ve düğmenin durduğu yerde
+    // yeşil bir rozetle gösteriliyor: sakin "Bildirimleri Aç"a bastıktan sonra
+    // aynı noktada yeşil bir onay görüyor.
+    //
+    // Rozet bilerek <button> DEĞİL. Yeşil düğmeye basınca bildirimler kapansa,
+    // renk "açık" derken eylem "kapat" olurdu. Bu alanda zaten bir kez
+    // yanılgı yaşandı; aşağıdaki uyarı o yüzden duruyor.
+    //
+    // DİKKAT: Kapatma yazısı yalnızca "Kapat" OLMAMALI. Türkçede hem "bu
+    // mesajı kapat" hem "bildirimleri kapat" anlamına geliyor; kullanıcı
+    // mesajı kapattığını sanıp aboneliğini siliyor. Eylem açıkça yazılmalı.
     return (
-      <div className="mb-6 flex items-center justify-between gap-3 text-xs text-muted">
-        <span>🔔 Duyuru bildirimleri açık.</span>
-        <button
-          type="button"
-          onClick={disable}
-          disabled={busy}
-          className="shrink-0 font-medium text-brand-navy hover:underline disabled:opacity-50"
-        >
-          {busy ? "Kapatılıyor..." : "Bildirimleri kapat"}
-        </button>
+      <div className={`${cardClass} mb-6 flex flex-wrap items-center justify-between gap-3`}>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground">Duyuru bildirimleri açık</p>
+          <p className="mt-0.5 text-xs text-muted">
+            Yeni duyuru girildiğinde telefonunuza bildirim gelecek.
+          </p>
+          {error && <p className="mt-1 text-xs text-brand-red">{error}</p>}
+        </div>
+        <div className="flex shrink-0 flex-col items-center gap-1">
+          <span className="inline-flex items-center justify-center rounded-lg bg-brand-green px-4 py-2.5 text-sm font-medium text-white">
+            ✓ Bildirimler Açık
+          </span>
+          <button
+            type="button"
+            onClick={disable}
+            disabled={busy}
+            className="text-xs font-medium text-muted hover:text-brand-navy hover:underline disabled:opacity-50"
+          >
+            {busy ? "Kapatılıyor..." : "Bildirimleri kapat"}
+          </button>
+        </div>
       </div>
     );
   }
